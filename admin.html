@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthspan — Staff Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #0A7C6B;
+      --teal-dark: #065C4F;
+      --teal-light: #E8F5F3;
+      --navy: #0D1B2A;
+      --gray: #6B7280;
+      --gray-light: #F9FAFB;
+      --border: #E5E7EB;
+      --white: #FFFFFF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --yellow: #F59E0B;
+      --yellow-light: #FFFBEB;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--gray-light);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--navy);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+    .staff-badge {
+      background: var(--teal);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.2); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--navy);
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-logo { font-size: 24px; font-weight: 800; color: #000; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: var(--gray); margin-bottom: 32px; }
+    .login-field { margin-bottom: 14px; text-align: left; }
+    .login-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    .login-input {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .login-input:focus { border-color: var(--teal); }
+    .login-error { color: var(--red); font-size: 13px; margin-bottom: 12px; display: none; }
+    .btn-login {
+      width: 100%;
+      background: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-login:hover { opacity: 0.85; }
+
+    .app { display: none; }
+    .app.active { display: block; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stat-number { font-size: 28px; font-weight: 800; color: var(--navy); }
+    .stat-label { font-size: 12px; color: var(--gray); font-weight: 600; margin-top: 2px; }
+    .stat-card.highlight .stat-number { color: var(--teal); }
+
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .week-label { font-size: 17px; font-weight: 700; color: var(--navy); }
+    .week-btns { display: flex; gap: 8px; }
+    .btn-week {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--navy);
+      transition: all 0.15s;
+    }
+    .btn-week:hover { background: var(--teal-light); border-color: var(--teal); }
+    .btn-week.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+    .schedule-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .schedule-header {
+      display: grid;
+      grid-template-columns: 70px repeat(7, 1fr);
+      background: var(--navy);
+      color: white;
+    }
+    .day-header {
+      padding: 12px 4px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .day-header .day-name { font-size: 11px; opacity: 0.7; text-transform: uppercase; }
+    .day-header .day-date { font-size: 16px; font-weight: 800; margin-top: 2px; }
+    .day-header.today { background: var(--teal); }
+    .time-col-header { padding: 12px 8px; }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 70px repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+    .time-row:last-child { border-bottom: none; }
+    .time-label {
+      padding: 10px 8px;
+      font-size: 11px;
+      color: var(--gray);
+      font-weight: 600;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+    }
+    .slot {
+      padding: 6px 4px;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .slot:last-child { border-right: none; }
+    .slot.closed { background: var(--gray-light); cursor: default; }
+    .slot.available { background: var(--green-light); cursor: pointer; }
+    .slot.available:hover { background: #D1FAE5; }
+    .slot.booked { background: var(--yellow-light); cursor: default; }
+    .slot.past { background: var(--gray-light); opacity: 0.5; cursor: default; }
+    .slot-inner { text-align: center; font-size: 10px; font-weight: 700; line-height: 1.3; }
+    .slot.available .slot-inner { color: var(--green); }
+    .slot.closed .slot-inner { color: #CBD5E1; }
+    .slot.booked .slot-inner { color: var(--yellow); }
+    .slot-icon { font-size: 14px; display: block; margin-bottom: 2px; }
+    .slot-name { font-size: 9px; font-weight: 600; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .legend { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--gray); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-dot.available { background: var(--green); }
+    .legend-dot.booked { background: var(--yellow); }
+    .legend-dot.closed { background: var(--border); }
+
+    .section-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+    .booking-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .booking-time {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 64px;
+      line-height: 1.3;
+    }
+    .booking-info { flex: 1; }
+    .booking-name { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .booking-detail { font-size: 12px; color: var(--gray); margin-top: 2px; }
+    .booking-badge { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; }
+    .booking-badge.soft { background: var(--teal-light); color: var(--teal-dark); }
+    .booking-badge.hard { background: #EEF2FF; color: #4338CA; }
+    .booking-badge.new { background: var(--green-light); color: #065F46; }
+    .empty-state { text-align: center; padding: 32px; color: var(--gray); font-size: 14px; }
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+    .save-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 99;
+    }
+    .save-status { font-size: 13px; color: var(--gray); }
+    .save-status.saved { color: var(--green); font-weight: 600; }
+    .btn-save {
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-save:hover { background: var(--teal-dark); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+      display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 18px; padding: 28px; width: 100%; max-width: 340px; }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub { font-size: 14px; color: var(--gray); margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal { flex: 1; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-modal.primary { background: var(--green); color: white; }
+    .btn-modal.danger { background: var(--red); color: white; }
+    .btn-modal.secondary { background: var(--gray-light); color: var(--navy); border: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      .stat-number { font-size: 20px; }
+      .schedule-header, .time-row { grid-template-columns: 50px repeat(7, 1fr); }
+      .time-label { font-size: 9px; padding: 6px 4px; }
+      .day-header .day-date { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">healthspan</div>
+    <div class="login-sub">Staff Portal · Schedule Management</div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" type="text" id="login-user" placeholder="staff" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div class="login-error" id="login-error">Incorrect username or password.</div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<div class="app" id="main-app">
+  <div class="header">
+    <div class="logo">healthspan</div>
+    <div class="header-right">
+      <div class="staff-badge">Staff Portal</div>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-bar">
+      <div class="stat-card highlight">
+        <div class="stat-number" id="stat-today">0</div>
+        <div class="stat-label">Today's Bookings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-week">0</div>
+        <div class="stat-label">This Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-open">0</div>
+        <div class="stat-label">Open Slots</div>
+      </div>
+    </div>
+
+    <div class="week-nav">
+      <div class="week-label" id="week-label">Loading...</div>
+      <div class="week-btns">
+        <button class="btn-week" onclick="prevWeek()">← Prev</button>
+        <button class="btn-week active" onclick="goToday()">Today</button>
+        <button class="btn-week" onclick="nextWeek()">Next →</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot available"></div> Open — Click to close</div>
+      <div class="legend-item"><div class="legend-dot booked"></div> Booked</div>
+      <div class="legend-item"><div class="legend-dot closed"></div> Closed — Click to open</div>
+    </div>
+
+    <div class="schedule-card">
+      <div class="schedule-header" id="schedule-header"></div>
+      <div class="schedule-body" id="schedule-body"></div>
+    </div>
+
+    <div class="section-title">Today's Bookings</div>
+    <div id="bookings-list"></div>
+  </div>
+
+  <div class="save-bar">
+    <div class="save-status" id="save-status">All changes saved</div>
+    <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="slot-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script>
+const STAFF_CREDENTIALS = [
+  { user: 'matt',  pass: 'healthspan2026' },
+  { user: 'laia',  pass: 'healthspan2026' },
+  { user: 'pablo', pass: 'healthspan2026' },
+  { user: 'staff', pass: 'healthspan2026' },
+];
+
+const HOURS = {
+  0: [],
+  1: ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'],
+  2: ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'],
+  3: ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'],
+  4: ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'],
+  5: ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'],
+  6: ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'],
+};
+
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const todayKey = dateKey(new Date());
+
+let bookings = JSON.parse(localStorage.getItem('hs_bookings') || 'null') || {
+  [todayKey]: [
+    { time: '9:00 AM',  name: 'Maria R.',  chamber: 'soft', phone: '305-555-0101', email: 'maria@email.com', source: 'Google' },
+    { time: '11:00 AM', name: 'James T.',  chamber: 'hard', phone: '786-555-0202', email: 'james@email.com', source: 'Meta' },
+    { time: '2:00 PM',  name: 'Sofia M.',  chamber: 'soft', phone: '954-555-0303', email: 'sofia@email.com', source: 'Referral' },
+  ]
+};
+
+let availability = JSON.parse(localStorage.getItem('hs_availability') || '{}');
+let weekOffset = 0;
+let selectedSlot = null;
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function getWeekDays(offset) {
+  const d = new Date();
+  const start = new Date(d.setDate(d.getDate() - d.getDay() + (offset * 7)));
+  start.setHours(0,0,0,0);
+  return Array.from({length:7}, (_,i) => { const x=new Date(start); x.setDate(start.getDate()+i); return x; });
+}
+
+function getAllHours() {
+  const order = ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM'];
+  const all = new Set(); Object.values(HOURS).forEach(h=>h.forEach(t=>all.add(t)));
+  return order.filter(t=>all.has(t));
+}
+
+function getSlotStatus(d, time) {
+  const key = dateKey(d);
+  const now = new Date(); now.setHours(0,0,0,0);
+  if (d < now) return 'past';
+  if ((bookings[key]||[]).some(b=>b.time===time)) return 'booked';
+  const avail = availability[key]?.[time];
+  if (avail === false) return 'closed';
+  if (avail === true) return 'available';
+  return HOURS[d.getDay()]?.includes(time) ? 'available' : 'closed';
+}
+
+function render() {
+  const days = getWeekDays(weekOffset);
+  const hours = getAllHours();
+  const tKey = dateKey(new Date());
+
+  const s=days[0], e=days[6];
+  document.getElementById('week-label').textContent = `${MONTHS[s.getMonth()]} ${s.getDate()} – ${MONTHS[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+
+  document.getElementById('schedule-header').innerHTML =
+    `<div class="time-col-header"></div>` +
+    days.map(d=>`<div class="day-header ${dateKey(d)===tKey?'today':''}"><div class="day-name">${DAY_NAMES[d.getDay()]}</div><div class="day-date">${d.getDate()}</div></div>`).join('');
+
+  document.getElementById('schedule-body').innerHTML = hours.map(time => {
+    const cells = days.map(d => {
+      const status = getSlotStatus(d, time);
+      const key = dateKey(d);
+      const booking = (bookings[key]||[]).find(b=>b.time===time);
+      let inner = '';
+      if (status==='available') inner=`<div class="slot-inner"><span class="slot-icon">✓</span>Open</div>`;
+      else if (status==='booked') inner=`<div class="slot-inner"><span class="slot-icon">📅</span><div class="slot-name">${booking?.name||'Booked'}</div></div>`;
+      else if (status==='closed') inner=`<div class="slot-inner"><span class="slot-icon" style="opacity:0.3">—</span></div>`;
+      const clickable = status==='available'||status==='closed';
+      return `<div class="slot ${status}" ${clickable?`onclick="slotClick('${key}','${time}','${status}')"`:''}>${inner}</div>`;
+    }).join('');
+    return `<div class="time-row"><div class="time-label">${time}</div>${cells}</div>`;
+  }).join('');
+
+  const todayBookings = bookings[tKey]||[];
+  document.getElementById('stat-today').textContent = todayBookings.length;
+  let weekTotal=0, openSlots=0;
+  days.forEach(d=>{ const k=dateKey(d); weekTotal+=(bookings[k]||[]).length; hours.forEach(t=>{ if(getSlotStatus(d,t)==='available') openSlots++; }); });
+  document.getElementById('stat-week').textContent = weekTotal;
+  document.getElementById('stat-open').textContent = openSlots;
+
+  const list = bookings[tKey]||[];
+  document.getElementById('bookings-list').innerHTML = list.length===0
+    ? `<div class="empty-state"><div class="empty-icon">📭</div>No bookings yet today</div>`
+    : list.map(b=>`<div class="booking-card">
+        <div class="booking-time">${b.time.replace(' ','<br>')}</div>
+        <div class="booking-info">
+          <div class="booking-name">${b.name}</div>
+          <div class="booking-detail">${b.email} · ${b.phone}</div>
+          <div class="booking-detail" style="margin-top:4px">Source: ${b.source||'—'}</div>
+        </div>
+        <div>
+          <span class="booking-badge ${b.chamber}">${b.chamber==='soft'?'Soft':'Hard'} Chamber</span>
+          <span class="booking-badge new" style="margin-top:4px;display:block">New Lead</span>
+        </div>
+      </div>`).join('');
+}
+
+function slotClick(dk, time, status) {
+  selectedSlot = {dk, time, status};
+  const isOpen = status==='available';
+  document.getElementById('modal-title').textContent = isOpen ? 'Close this slot?' : 'Open this slot?';
+  document.getElementById('modal-sub').textContent = isOpen ? `Block ${time} — prospects cannot book it.` : `Make ${time} available for online booking.`;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn-modal secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-modal ${isOpen?'danger':'primary'}" onclick="toggleSlot(${!isOpen})">${isOpen?'Close Slot':'Open Slot'}</button>`;
+  document.getElementById('slot-modal').classList.add('open');
+}
+
+function toggleSlot(open) {
+  const {dk, time} = selectedSlot;
+  if (!availability[dk]) availability[dk]={};
+  availability[dk][time] = open;
+  document.getElementById('save-status').textContent = 'Unsaved changes — click Save';
+  document.getElementById('save-status').className = 'save-status';
+  closeModal(); render();
+}
+
+function closeModal() { document.getElementById('slot-modal').classList.remove('open'); }
+function prevWeek() { weekOffset--; render(); }
+function nextWeek() { weekOffset++; render(); }
+function goToday()  { weekOffset=0; render(); }
+
+function saveSchedule() {
+  localStorage.setItem('hs_availability', JSON.stringify(availability));
+  localStorage.setItem('hs_bookings', JSON.stringify(bookings));
+  const s = document.getElementById('save-status');
+  s.textContent = '✓ Saved'; s.className = 'save-status saved';
+  setTimeout(()=>{ s.textContent='All changes saved'; }, 2000);
+}
+
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+  if (STAFF_CREDENTIALS.find(c=>c.user===user&&c.pass===pass)) {
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('main-app').classList.add('active');
+    sessionStorage.setItem('hs_staff', user);
+    render();
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('hs_staff');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('main-app').classList.remove('active');
+}
+
+if (sessionStorage.getItem('hs_staff')) {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').classList.add('active');
+  render();
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

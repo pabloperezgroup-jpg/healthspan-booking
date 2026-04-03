@@ -116,14 +116,15 @@
     /* Inline nudge message */
     .section-nudge-msg {
       display: inline-block;
-      margin-top: 6px;
-      font-size: 12px;
-      font-weight: 600;
+      margin-top: 10px;
+      font-size: 15px;
+      font-weight: 700;
       color: var(--teal);
       background: var(--teal-light);
-      padding: 4px 10px;
+      padding: 8px 16px;
       border-radius: 20px;
-      animation: nudgeFade 2s ease forwards;
+      border: 1px solid rgba(10,124,107,0.2);
+      animation: nudgeFade 2.5s ease forwards;
     }
     @keyframes nudgeFade {
       0%   { opacity: 0; transform: translateY(-4px); }
@@ -1356,7 +1357,7 @@ function nudgeLocked(secId) {
   nudge.className = 'section-nudge-msg';
   nudge.textContent = NUDGE_MSGS[secId] || 'Complete the step above first';
   hdr.appendChild(nudge);
-  setTimeout(() => nudge.remove(), 2100);
+  setTimeout(() => nudge.remove(), 2600);
 }
 
 function scrollTo(id) {

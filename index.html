@@ -88,33 +88,40 @@
     /* ── SECTION BLOCKS ── */
     .section {
       background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 14px;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.07);
+      border: 1px solid rgba(255,255,255,0.9);
+      margin-bottom: 16px;
       overflow: hidden;
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     .section.locked {
-      opacity: 0.45;
+      opacity: 0.42;
       pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
     .section-header {
       padding: 20px 22px 16px;
       border-bottom: 1px solid var(--border);
     }
     .section-number {
+      display: inline-flex;
+      align-items: center;
+      background: var(--teal);
+      color: white;
       font-size: 11px;
-      font-weight: 700;
-      color: var(--teal);
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
+      letter-spacing: 0.8px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
     }
     .section-title {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       color: var(--navy);
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
     }
     .section-body {
       padding: 20px 22px;
@@ -127,21 +134,34 @@
       gap: 12px;
     }
     .chamber-card {
-      border: 2px solid var(--border);
-      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
       padding: 18px 16px;
       cursor: pointer;
       transition: all 0.2s ease;
       position: relative;
+      background: #F8FAFB;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.05);
     }
     .chamber-card:hover {
       border-color: var(--teal);
       background: var(--teal-light);
+      box-shadow: 0 2px 8px rgba(10,124,107,0.1), 0 8px 20px rgba(10,124,107,0.08);
+      transform: translateY(-2px);
     }
     .chamber-card.selected {
       border-color: var(--teal);
       background: var(--teal-light);
+      box-shadow: 0 2px 8px rgba(10,124,107,0.12), 0 8px 20px rgba(10,124,107,0.1);
     }
+    .chamber-tap-hint {
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 10px;
+      font-weight: 500;
+      opacity: 0.7;
+    }
+    .chamber-card.selected .chamber-tap-hint { display: none; }
     .chamber-card.selected::after {
       content: '✓';
       position: absolute;
@@ -650,6 +670,7 @@
             <div class="price-old">$149</div>
             <div class="price-save">Save $100</div>
           </div>
+          <div class="chamber-tap-hint">Tap to select →</div>
         </div>
 
         <div class="chamber-card" id="card-hard" onclick="selectChamber('hard')">
@@ -660,6 +681,7 @@
             <div class="price-old">$199</div>
             <div class="price-save">Save $100</div>
           </div>
+          <div class="chamber-tap-hint">Tap to select →</div>
         </div>
 
       </div>

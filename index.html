@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Book Your First HBOT Session · Healthspan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <style>
@@ -29,7 +30,7 @@
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--gray-light);
       color: var(--navy);
       min-height: 100vh;
@@ -96,9 +97,41 @@
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     .section.locked {
-      opacity: 0.42;
-      pointer-events: none;
+      opacity: 0.48;
       box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      pointer-events: none;
+    }
+    /* Invisible overlay catches taps on locked sections */
+    .section { position: relative; }
+    .section-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      border-radius: 20px;
+      cursor: default;
+    }
+    .section.locked .section-overlay {
+      display: block;
+      pointer-events: all;
+    }
+    /* Inline nudge message */
+    .section-nudge-msg {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--teal);
+      background: var(--teal-light);
+      padding: 4px 10px;
+      border-radius: 20px;
+      animation: nudgeFade 2s ease forwards;
+    }
+    @keyframes nudgeFade {
+      0%   { opacity: 0; transform: translateY(-4px); }
+      15%  { opacity: 1; transform: translateY(0); }
+      70%  { opacity: 1; }
+      100% { opacity: 0; }
     }
     .section-header {
       padding: 20px 22px 16px;
@@ -275,17 +308,27 @@
     }
     .cal-day.available {
       color: var(--navy);
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
+      background: #F8FAFB;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
     }
     .cal-day.available:hover {
       background: var(--teal-light);
       color: var(--teal);
+      border-color: rgba(10,124,107,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(10,124,107,0.1), 0 4px 10px rgba(10,124,107,0.07);
     }
     .cal-day.selected {
       background: var(--teal);
       color: white;
       font-weight: 700;
+      border-color: var(--teal);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(10,124,107,0.2), 0 4px 12px rgba(10,124,107,0.15);
     }
     .cal-day.today {
       border: 2px solid var(--teal);
@@ -297,7 +340,7 @@
       color: white;
     }
     .cal-day.past { opacity: 0.3; }
-    .cal-day.no-slots { opacity: 0.35; }
+    .cal-day.no-slots { opacity: 0.3; }
 
     /* ── TIME SLOTS ── */
     .time-grid {
@@ -306,30 +349,37 @@
       gap: 8px;
     }
     .time-pill {
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 11px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 6px;
       text-align: center;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--navy);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
+      background: #F8FAFB;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 3px 8px rgba(0,0,0,0.04);
     }
     .time-pill:hover {
-      border-color: var(--teal);
+      border-color: rgba(10,124,107,0.3);
       background: var(--teal-light);
       color: var(--teal);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(10,124,107,0.1), 0 6px 14px rgba(10,124,107,0.07);
     }
     .time-pill.selected {
       border-color: var(--teal);
       background: var(--teal);
       color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(10,124,107,0.2), 0 6px 16px rgba(10,124,107,0.15);
     }
     .time-pill.booked {
-      opacity: 0.3;
+      opacity: 0.28;
       cursor: not-allowed;
       text-decoration: line-through;
+      box-shadow: none;
     }
 
     /* ── FORM FIELDS ── */
@@ -359,7 +409,7 @@
       outline: none;
       transition: border-color 0.15s;
       width: 100%;
-      font-family: inherit;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
     .field-input:focus { border-color: var(--teal); }
     .field-input.error { border-color: var(--error); }
@@ -437,7 +487,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       letter-spacing: -0.2px;
-      font-family: inherit;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
     .btn-book:hover:not(:disabled) {
       background: var(--teal-dark);
@@ -590,7 +640,7 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      font-family: inherit;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       transition: opacity 0.15s;
     }
     .btn-membership:hover { opacity: 0.9; }
@@ -690,6 +740,7 @@
 
   <!-- 2. DATE -->
   <div class="section locked" id="sec-date">
+    <div class="section-overlay" onclick="nudgeLocked('sec-date')"></div>
     <div class="section-header">
       <div class="section-number">Step 2</div>
       <div class="section-title">Pick a Date</div>
@@ -712,6 +763,7 @@
 
   <!-- 3. TIME -->
   <div class="section locked" id="sec-time">
+    <div class="section-overlay" onclick="nudgeLocked('sec-time')"></div>
     <div class="section-header">
       <div class="section-number">Step 3</div>
       <div class="section-title" id="time-title">Available Times</div>
@@ -723,6 +775,7 @@
 
   <!-- 4. YOUR INFO -->
   <div class="section locked" id="sec-info">
+    <div class="section-overlay" onclick="nudgeLocked('sec-info')"></div>
     <div class="section-header">
       <div class="section-number">Step 4</div>
       <div class="section-title">Your Information</div>
@@ -755,6 +808,7 @@
 
   <!-- 5. PAYMENT -->
   <div class="section locked" id="sec-payment">
+    <div class="section-overlay" onclick="nudgeLocked('sec-payment')"></div>
     <div class="section-header">
       <div class="section-number">Step 5</div>
       <div class="section-title">Secure Payment</div>
@@ -1286,6 +1340,25 @@ function showConfirmation(booking) {
 // ════════════════════════════════════════════
 function unlock(id) {
   document.getElementById(id).classList.remove('locked');
+}
+
+const NUDGE_MSGS = {
+  'sec-date':    '← Choose your chamber first',
+  'sec-time':    '← Pick a date first',
+  'sec-info':    '← Select a time first',
+  'sec-payment': '← Fill in your info first'
+};
+function nudgeLocked(secId) {
+  const sec = document.getElementById(secId);
+  if (!sec.classList.contains('locked')) return;
+  const hdr = sec.querySelector('.section-header');
+  const existing = hdr.querySelector('.section-nudge-msg');
+  if (existing) existing.remove();
+  const nudge = document.createElement('div');
+  nudge.className = 'section-nudge-msg';
+  nudge.textContent = NUDGE_MSGS[secId] || 'Complete the step above first';
+  hdr.appendChild(nudge);
+  setTimeout(() => nudge.remove(), 2100);
 }
 
 function scrollTo(id) {

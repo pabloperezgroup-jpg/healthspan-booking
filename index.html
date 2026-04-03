@@ -3,35 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Healthspan — Book Your First HBOT Session</title>
+  <title>Book Your First HBOT Session · Healthspan</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --teal: #0A7C6B;
       --teal-dark: #065C4F;
-      --teal-light: #E8F5F3;
+      --teal-light: #F0FAF8;
       --navy: #0D1B2A;
       --gray: #6B7280;
-      --gray-light: #F9FAFB;
-      --border: #E5E7EB;
+      --gray-light: #F7F8F9;
+      --border: #E8EAED;
       --white: #FFFFFF;
-      --red: #EF4444;
       --success: #10B981;
+      --error: #EF4444;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
       background: var(--gray-light);
       color: var(--navy);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* HEADER */
+    /* ── HEADER ── */
     .header {
       background: var(--white);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 18px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -40,385 +49,363 @@
       z-index: 100;
     }
     .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: #000;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--navy);
       letter-spacing: -0.5px;
     }
-    .logo span { color: #000; }
-    .header-phone {
+    .header-contact {
       font-size: 13px;
       color: var(--gray);
     }
-    .header-phone a { color: var(--teal); text-decoration: none; font-weight: 600; }
+    .header-contact a {
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 600;
+    }
 
-    /* OFFER BANNER */
-    .offer-banner {
-      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    /* ── OFFER STRIP ── */
+    .offer-strip {
+      background: var(--navy);
       color: white;
       text-align: center;
-      padding: 14px 24px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
     }
-    .offer-banner .offer-label {
+    .offer-strip span {
+      color: #5EEAD4;
+    }
+
+    /* ── MAIN CONTAINER ── */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 28px 16px 120px;
+    }
+
+    /* ── SECTION BLOCKS ── */
+    .section {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .section.locked {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .section-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-number {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 2px;
+      color: var(--teal);
       text-transform: uppercase;
-      opacity: 0.85;
+      letter-spacing: 1px;
       margin-bottom: 4px;
     }
-    .offer-banner .offer-text {
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .offer-banner .offer-sub {
-      font-size: 13px;
-      opacity: 0.85;
-      margin-top: 2px;
-    }
-
-    /* PROGRESS BAR */
-    .progress-wrap {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px 0;
-    }
-    .progress-steps {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    .step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-    }
-    .step-dot {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--border);
-      color: var(--gray);
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      z-index: 1;
-      transition: all 0.3s;
-    }
-    .step.active .step-dot { background: var(--teal); color: white; }
-    .step.done .step-dot { background: var(--success); color: white; }
-    .step-label {
-      font-size: 11px;
-      color: var(--gray);
-      margin-top: 6px;
-      font-weight: 500;
-      text-align: center;
-      padding-bottom: 14px;
-    }
-    .step.active .step-label { color: var(--teal); font-weight: 700; }
-    .step.done .step-label { color: var(--success); }
-    .step-line {
-      flex: 1;
-      height: 2px;
-      background: var(--border);
-      margin-top: -14px;
-      transition: background 0.3s;
-    }
-    .step-line.done { background: var(--success); }
-
-    /* MAIN CONTENT */
-    .container {
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 24px 16px 80px;
-    }
-
-    /* CARDS */
-    .card {
-      background: var(--white);
-      border-radius: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-    .card-title {
+    .section-title {
       font-size: 18px;
       font-weight: 700;
       color: var(--navy);
-      padding: 20px 20px 16px;
-      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.3px;
     }
-    .card-title span {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--gray);
-      display: block;
-      margin-top: 2px;
+    .section-body {
+      padding: 20px 22px;
     }
 
-    /* SCREENS */
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    /* ── STEP 1: CHOOSE CHAMBER ── */
-    .chamber-options { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    /* ── CHAMBER SELECTION ── */
+    .chamber-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
     .chamber-card {
       border: 2px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: var(--radius-sm);
+      padding: 18px 16px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       position: relative;
-      overflow: hidden;
     }
-    .chamber-card:hover { border-color: var(--teal); background: var(--teal-light); }
-    .chamber-card.selected { border-color: var(--teal); background: var(--teal-light); }
+    .chamber-card:hover {
+      border-color: var(--teal);
+      background: var(--teal-light);
+    }
+    .chamber-card.selected {
+      border-color: var(--teal);
+      background: var(--teal-light);
+    }
     .chamber-card.selected::after {
       content: '✓';
       position: absolute;
-      top: 14px; right: 16px;
-      width: 24px; height: 24px;
+      top: 12px;
+      right: 14px;
+      width: 22px;
+      height: 22px;
       background: var(--teal);
       color: white;
       border-radius: 50%;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
+      line-height: 22px;
+      text-align: center;
     }
     .chamber-name {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--navy);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      line-height: 1.3;
     }
     .chamber-desc {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--gray);
       line-height: 1.5;
       margin-bottom: 12px;
     }
-    .chamber-pricing {
+    .chamber-price {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: baseline;
+      gap: 6px;
     }
     .price-new {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       color: var(--teal);
     }
     .price-old {
-      font-size: 15px;
+      font-size: 13px;
       color: var(--gray);
       text-decoration: line-through;
     }
-    .price-badge {
-      background: #FEF2F2;
-      color: var(--red);
+    .price-save {
       font-size: 11px;
       font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-    }
-    .chamber-features {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .feature-tag {
-      background: rgba(10,124,107,0.1);
-      color: var(--teal-dark);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
+      color: var(--success);
     }
 
-    /* ── STEP 2: CALENDAR ── */
-    .calendar-wrap { padding: 16px; }
+    /* ── CALENDAR ── */
     .month-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
     }
-    .month-nav button {
-      background: none;
+    .month-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .month-btn {
+      width: 32px;
+      height: 32px;
       border: 1px solid var(--border);
       border-radius: 8px;
-      width: 36px; height: 36px;
-      cursor: pointer;
-      font-size: 16px;
+      background: var(--white);
       color: var(--navy);
+      font-size: 16px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s;
     }
-    .month-nav button:hover { background: var(--teal-light); border-color: var(--teal); }
-    .month-label { font-size: 16px; font-weight: 700; color: var(--navy); }
+    .month-btn:hover { border-color: var(--teal); color: var(--teal); }
+
     .day-headers {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       margin-bottom: 8px;
     }
-    .day-header {
+    .day-hdr {
       text-align: center;
       font-size: 11px;
       font-weight: 700;
       color: var(--gray);
       text-transform: uppercase;
+      letter-spacing: 0.5px;
       padding: 4px 0;
     }
-    .calendar-grid {
+    .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
     }
     .cal-day {
       aspect-ratio: 1;
-      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray);
+      cursor: default;
+      transition: all 0.15s;
+    }
+    .cal-day.available {
+      color: var(--navy);
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s;
-      color: var(--navy);
-      position: relative;
     }
-    .cal-day:hover:not(.empty):not(.past):not(.no-avail) {
+    .cal-day.available:hover {
       background: var(--teal-light);
-    }
-    .cal-day.empty { cursor: default; }
-    .cal-day.past { color: var(--border); cursor: default; }
-    .cal-day.no-avail { color: var(--border); cursor: default; }
-    .cal-day.has-slots::after {
-      content: '';
-      position: absolute;
-      bottom: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 5px; height: 5px;
-      background: var(--teal);
-      border-radius: 50%;
+      color: var(--teal);
     }
     .cal-day.selected {
-      background: var(--teal) !important;
-      color: white !important;
-    }
-    .cal-day.selected::after { background: white; }
-    .cal-day.today { font-weight: 800; }
-
-    /* TIME SLOTS */
-    .time-section { padding: 16px; border-top: 1px solid var(--border); }
-    .time-section-title {
-      font-size: 13px;
+      background: var(--teal);
+      color: white;
       font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-    .time-slots {
+    .cal-day.today {
+      border: 2px solid var(--teal);
+      color: var(--teal);
+      font-weight: 700;
+    }
+    .cal-day.today.selected {
+      background: var(--teal);
+      color: white;
+    }
+    .cal-day.past { opacity: 0.3; }
+    .cal-day.no-slots { opacity: 0.35; }
+
+    /* ── TIME SLOTS ── */
+    .time-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
-    .time-slot {
+    .time-pill {
       border: 2px solid var(--border);
       border-radius: 10px;
-      padding: 10px 6px;
+      padding: 11px 6px;
       text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
       font-size: 13px;
       font-weight: 600;
       color: var(--navy);
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .time-slot:hover { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
-    .time-slot.selected { border-color: var(--teal); background: var(--teal); color: white; }
-    .time-slot.booked { background: var(--gray-light); color: var(--border); cursor: default; border-color: var(--border); }
-    .time-slot-period { font-size: 10px; font-weight: 500; opacity: 0.7; }
+    .time-pill:hover {
+      border-color: var(--teal);
+      background: var(--teal-light);
+      color: var(--teal);
+    }
+    .time-pill.selected {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: white;
+    }
+    .time-pill.booked {
+      opacity: 0.3;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
 
-    /* ── STEP 3: CONTACT ── */
-    .contact-form { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    /* ── FORM FIELDS ── */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field-row.full { grid-template-columns: 1fr; }
+    .field-wrap { display: flex; flex-direction: column; }
     .field-label {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
       margin-bottom: 6px;
-      display: block;
     }
     .field-input {
-      width: 100%;
       border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 16px;
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font-size: 15px;
       color: var(--navy);
       background: var(--white);
       outline: none;
       transition: border-color 0.15s;
-      -webkit-appearance: none;
+      width: 100%;
+      font-family: inherit;
     }
     .field-input:focus { border-color: var(--teal); }
+    .field-input.error { border-color: var(--error); }
     .field-input::placeholder { color: #C4C9D0; }
-    .field-input.error { border-color: var(--red); }
 
-    /* ORDER SUMMARY */
-    .summary-card {
+    /* ── ORDER SUMMARY ── */
+    .summary-box {
       background: var(--teal-light);
-      border: 1px solid rgba(10,124,107,0.2);
-      border-radius: 14px;
-      padding: 16px;
-      margin: 16px;
-    }
-    .summary-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--teal-dark);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(10,124,107,0.12);
     }
     .summary-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 14px;
-      margin-bottom: 8px;
       color: var(--navy);
+      margin-bottom: 6px;
     }
+    .summary-row:last-child { margin-bottom: 0; }
     .summary-row.total {
-      border-top: 1px solid rgba(10,124,107,0.2);
-      padding-top: 10px;
-      margin-top: 4px;
+      font-size: 17px;
       font-weight: 800;
-      font-size: 16px;
+      padding-top: 10px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(10,124,107,0.15);
     }
-    .summary-row .savings { color: var(--success); font-weight: 700; }
+    .summary-label { font-weight: 500; }
+    .summary-value { font-weight: 700; }
+    .summary-discount { color: var(--success); font-weight: 700; }
 
-    /* BOTTOM BUTTON */
-    .bottom-bar {
+    /* ── STRIPE ── */
+    #stripe-payment-element {
+      min-height: 100px;
+    }
+    .stripe-secure {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 14px;
+      justify-content: center;
+    }
+    #payment-message {
+      color: var(--error);
+      font-size: 14px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #FEF2F2;
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* ── STICKY BOOK BUTTON ── */
+    .book-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: var(--white);
       border-top: 1px solid var(--border);
-      padding: 16px;
+      padding: 16px 20px;
       z-index: 99;
     }
-    .btn-primary {
+    .btn-book {
       width: 100%;
       background: var(--teal);
       color: white;
@@ -428,234 +415,245 @@
       font-size: 17px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
       letter-spacing: -0.2px;
+      font-family: inherit;
     }
-    .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { background: var(--border); color: var(--gray); cursor: default; transform: none; }
-    .btn-back {
-      background: none;
-      border: none;
-      color: var(--teal);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 12px;
+    .btn-book:hover:not(:disabled) {
+      background: var(--teal-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(10,124,107,0.3);
     }
-    .btn-back:hover { color: var(--teal-dark); }
+    .btn-book:active:not(:disabled) { transform: translateY(0); }
+    .btn-book:disabled {
+      background: #D1D5DB;
+      color: #9CA3AF;
+      cursor: default;
+      transform: none;
+    }
 
-    /* ── STEP 4: CONFIRMATION ── */
-    .confirmation {
+    /* ── CONFIRMATION ── */
+    .confirmation { display: none; }
+    .confirmation.visible { display: block; }
+    .confirm-hero {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 44px 28px 36px;
       text-align: center;
-      padding: 40px 20px;
+      margin-bottom: 14px;
     }
-    .confirm-icon {
-      width: 80px; height: 80px;
+    .confirm-check {
+      width: 72px;
+      height: 72px;
       background: var(--success);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 24px;
-      font-size: 36px;
+      font-size: 32px;
+      margin: 0 auto 22px;
     }
     .confirm-title {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
       color: var(--navy);
-      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      line-height: 1.2;
     }
     .confirm-sub {
       font-size: 15px;
       color: var(--gray);
       line-height: 1.6;
-      margin-bottom: 28px;
     }
-    .confirm-details {
-      background: var(--gray-light);
-      border-radius: 14px;
-      padding: 18px;
-      text-align: left;
-      margin-bottom: 24px;
+    .confirm-sub strong { color: var(--navy); }
+
+    .confirm-details-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 22px;
+      margin-bottom: 14px;
+    }
+    .confirm-details-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--teal);
+      margin-bottom: 16px;
     }
     .confirm-detail-row {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 14px;
     }
     .confirm-detail-row:last-child { margin-bottom: 0; }
-    .confirm-icon-sm {
-      width: 36px; height: 36px;
+    .confirm-icon {
+      width: 38px;
+      height: 38px;
       background: var(--teal-light);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 17px;
       flex-shrink: 0;
     }
-    .confirm-detail-text { font-size: 14px; color: var(--navy); }
-    .confirm-detail-label { font-size: 11px; color: var(--gray); font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
-    .confirm-detail-value { font-weight: 700; }
-
-    .membership-nudge {
-      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
-      border-radius: 14px;
-      padding: 20px;
-      color: white;
-      text-align: left;
-    }
-    .nudge-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
-    .nudge-sub { font-size: 13px; opacity: 0.9; line-height: 1.5; margin-bottom: 14px; }
-    .btn-nudge {
-      background: white;
-      color: var(--teal-dark);
-      border: none;
-      border-radius: 10px;
-      padding: 12px 20px;
-      font-size: 14px;
+    .confirm-detail-label {
+      font-size: 11px;
       font-weight: 700;
-      cursor: pointer;
-      width: 100%;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .confirm-detail-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+      line-height: 1.4;
     }
 
-    /* STRIPE STEP */
-    .stripe-wrap { padding: 20px; }
-    .stripe-header {
+    .membership-card {
+      background: var(--navy);
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      margin-bottom: 14px;
+      color: white;
+    }
+    .membership-card-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .membership-card-sub {
+      font-size: 14px;
+      opacity: 0.8;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .membership-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .benefit-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      font-size: 14px;
+      opacity: 0.9;
     }
-    .stripe-logo {
-      background: #635BFF;
-      color: white;
-      font-size: 12px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 6px;
-      letter-spacing: -0.3px;
-    }
-    .stripe-secure { font-size: 12px; color: var(--gray); }
-    .stripe-field-group { margin-bottom: 14px; }
-    .stripe-input {
-      width: 100%;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: 16px;
-      color: var(--navy);
-      background: var(--white);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .stripe-input:focus { border-color: #635BFF; }
-    .stripe-row { display: flex; gap: 10px; }
-    .stripe-row .stripe-field-group { flex: 1; }
-    .secure-badge {
+    .benefit-check {
+      width: 20px;
+      height: 20px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--gray);
-      margin-top: 12px;
+      font-size: 10px;
+      flex-shrink: 0;
     }
-    .secure-badge svg { width: 14px; height: 14px; fill: var(--gray); }
+    .btn-membership {
+      width: 100%;
+      background: white;
+      color: var(--navy);
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn-membership:hover { opacity: 0.9; }
 
-    /* UTM HIDDEN */
-    .utm-hidden { display: none; }
+    .hbot-link-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--navy);
+      transition: box-shadow 0.15s;
+      margin-bottom: 14px;
+    }
+    .hbot-link-card:hover { box-shadow: var(--shadow-md); }
+    .hbot-link-text { font-size: 15px; font-weight: 700; }
+    .hbot-link-sub { font-size: 13px; color: var(--gray); margin-top: 3px; }
+    .hbot-link-arrow {
+      width: 36px;
+      height: 36px;
+      background: var(--teal-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--teal);
+      flex-shrink: 0;
+    }
 
-    /* RESPONSIVE */
-    @media (max-width: 400px) {
-      .time-slots { grid-template-columns: repeat(2, 1fr); }
-      .confirm-title { font-size: 22px; }
+    /* ── MOBILE ── */
+    @media (max-width: 420px) {
+      .chamber-grid { grid-template-columns: 1fr; }
+      .time-grid { grid-template-columns: repeat(3, 1fr); }
+      .field-row { grid-template-columns: 1fr; }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">health<span>span</span></div>
-  <div class="header-phone">Need help? <a href="tel:7867131222">786-713-1222</a></div>
+  <div class="logo">healthspan</div>
+  <div class="header-contact">Questions? <a href="tel:7867131222">786-713-1222</a></div>
 </div>
 
-<!-- OFFER BANNER -->
-<div class="offer-banner">
-  <div class="offer-label">Limited Time Offer</div>
-  <div class="offer-text">$100 Off Your First HBOT Session</div>
-  <div class="offer-sub">Hyperbaric Oxygen Therapy · Brickell, Miami</div>
+<!-- OFFER STRIP -->
+<div class="offer-strip">
+  <span>$100 off</span> your first Hyperbaric session · Brickell, Miami
 </div>
 
-<!-- PROGRESS -->
-<div class="progress-wrap">
-  <div class="progress-steps">
-    <div class="step active" id="step-indicator-1">
-      <div class="step-dot">1</div>
-      <div class="step-label">Choose</div>
-    </div>
-    <div class="step-line" id="line-1"></div>
-    <div class="step active" id="step-indicator-2" style="opacity:0.4">
-      <div class="step-dot">2</div>
-      <div class="step-label">Schedule</div>
-    </div>
-    <div class="step-line" id="line-2"></div>
-    <div class="step" id="step-indicator-3" style="opacity:0.4">
-      <div class="step-dot">3</div>
-      <div class="step-label">Pay</div>
-    </div>
-  </div>
-</div>
+<!-- MAIN -->
+<div class="container" id="booking-form">
 
-<div class="container">
+  <!-- 1. CHOOSE CHAMBER -->
+  <div class="section" id="sec-chamber">
+    <div class="section-header">
+      <div class="section-number">Step 1</div>
+      <div class="section-title">Choose Your Chamber</div>
+    </div>
+    <div class="section-body">
+      <div class="chamber-grid">
 
-  <!-- ═══ SCREEN 1: CHOOSE CHAMBER ═══ -->
-  <div class="screen active" id="screen-1">
-    <div class="card">
-      <div class="card-title">
-        Choose Your Chamber
-        <span>Both are 60-minute sessions. First visit includes a full orientation.</span>
-      </div>
-      <div class="chamber-options">
-
-        <div class="chamber-card" id="chamber-soft" onclick="selectChamber('soft')">
-          <div class="chamber-name">Soft Hyperbaric Chamber</div>
-          <div class="chamber-desc">1.3–1.5 ATA pressure. Comfortable and spacious. Ideal for first-timers, recovery, sleep, and immune support.</div>
-          <div class="chamber-pricing">
+        <div class="chamber-card" id="card-soft" onclick="selectChamber('soft')">
+          <div class="chamber-name">Soft Chamber</div>
+          <div class="chamber-desc">1.3–1.5 ATA. Ideal for recovery, sleep, and immune support.</div>
+          <div class="chamber-price">
             <div class="price-new">$49</div>
             <div class="price-old">$149</div>
-            <div class="price-badge">$100 OFF</div>
-          </div>
-          <div class="chamber-features">
-            <span class="feature-tag">Recovery</span>
-            <span class="feature-tag">Sleep</span>
-            <span class="feature-tag">Immune Support</span>
-            <span class="feature-tag">Anti-Aging</span>
+            <div class="price-save">Save $100</div>
           </div>
         </div>
 
-        <div class="chamber-card" id="chamber-hard" onclick="selectChamber('hard')">
-          <div class="chamber-name">Hard Hyperbaric Chamber</div>
-          <div class="chamber-desc">Up to 2.0 ATA pressure. Clinical-grade. Used by athletes and medical patients for accelerated healing.</div>
-          <div class="chamber-pricing">
+        <div class="chamber-card" id="card-hard" onclick="selectChamber('hard')">
+          <div class="chamber-name">Hard Chamber</div>
+          <div class="chamber-desc">Up to 2.0 ATA. Clinical-grade for accelerated healing.</div>
+          <div class="chamber-price">
             <div class="price-new">$99</div>
             <div class="price-old">$199</div>
-            <div class="price-badge">$100 OFF</div>
-          </div>
-          <div class="chamber-features">
-            <span class="feature-tag">Clinical Grade</span>
-            <span class="feature-tag">Injury Recovery</span>
-            <span class="feature-tag">Performance</span>
-            <span class="feature-tag">Neurological</span>
+            <div class="price-save">Save $100</div>
           </div>
         </div>
 
@@ -663,249 +661,229 @@
     </div>
   </div>
 
-  <!-- ═══ SCREEN 2: SCHEDULE ═══ -->
-  <div class="screen" id="screen-2">
-    <button class="btn-back" onclick="goToScreen(1)">← Back</button>
-    <div class="card">
-      <div class="card-title">
-        Pick a Date & Time
-        <span id="screen2-subtitle">Select an available slot below</span>
+  <!-- 2. DATE -->
+  <div class="section locked" id="sec-date">
+    <div class="section-header">
+      <div class="section-number">Step 2</div>
+      <div class="section-title">Pick a Date</div>
+    </div>
+    <div class="section-body">
+      <div class="month-nav">
+        <button class="month-btn" onclick="prevMonth()">‹</button>
+        <div class="month-label" id="month-label"></div>
+        <button class="month-btn" onclick="nextMonth()">›</button>
       </div>
-
-      <!-- CALENDAR -->
-      <div class="calendar-wrap">
-        <div class="month-nav">
-          <button onclick="prevMonth()">&#8249;</button>
-          <div class="month-label" id="month-label"></div>
-          <button onclick="nextMonth()">&#8250;</button>
-        </div>
-        <div class="day-headers">
-          <div class="day-header">Su</div>
-          <div class="day-header">Mo</div>
-          <div class="day-header">Tu</div>
-          <div class="day-header">We</div>
-          <div class="day-header">Th</div>
-          <div class="day-header">Fr</div>
-          <div class="day-header">Sa</div>
-        </div>
-        <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="day-headers">
+        <div class="day-hdr">Su</div><div class="day-hdr">Mo</div>
+        <div class="day-hdr">Tu</div><div class="day-hdr">We</div>
+        <div class="day-hdr">Th</div><div class="day-hdr">Fr</div>
+        <div class="day-hdr">Sa</div>
       </div>
-
-      <!-- TIME SLOTS -->
-      <div class="time-section" id="time-section" style="display:none">
-        <div class="time-section-title" id="time-section-title">Available Times</div>
-        <div class="time-slots" id="time-slots"></div>
-      </div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
   </div>
 
-  <!-- ═══ SCREEN 3: CONTACT + PAYMENT ═══ -->
-  <div class="screen" id="screen-3">
-    <button class="btn-back" onclick="goToScreen(2)">← Back</button>
-    <div class="card">
-      <div class="card-title">
-        Your Information
-        <span>No account needed. Takes 30 seconds.</span>
-      </div>
-      <div class="contact-form">
-        <div>
-          <label class="field-label" for="fname">First Name</label>
+  <!-- 3. TIME -->
+  <div class="section locked" id="sec-time">
+    <div class="section-header">
+      <div class="section-number">Step 3</div>
+      <div class="section-title" id="time-title">Available Times</div>
+    </div>
+    <div class="section-body">
+      <div class="time-grid" id="time-grid"></div>
+    </div>
+  </div>
+
+  <!-- 4. YOUR INFO -->
+  <div class="section locked" id="sec-info">
+    <div class="section-header">
+      <div class="section-number">Step 4</div>
+      <div class="section-title">Your Information</div>
+    </div>
+    <div class="section-body">
+      <div class="field-row">
+        <div class="field-wrap">
+          <label class="field-label">First Name</label>
           <input class="field-input" type="text" id="fname" placeholder="Maria" autocomplete="given-name" />
         </div>
-        <div>
-          <label class="field-label" for="lname">Last Name</label>
+        <div class="field-wrap">
+          <label class="field-label">Last Name</label>
           <input class="field-input" type="text" id="lname" placeholder="Rodriguez" autocomplete="family-name" />
         </div>
-        <div>
-          <label class="field-label" for="email">Email</label>
+      </div>
+      <div class="field-row full">
+        <div class="field-wrap">
+          <label class="field-label">Email</label>
           <input class="field-input" type="email" id="email" placeholder="maria@email.com" autocomplete="email" />
         </div>
-        <div>
-          <label class="field-label" for="phone">Phone</label>
+      </div>
+      <div class="field-row full">
+        <div class="field-wrap">
+          <label class="field-label">Phone</label>
           <input class="field-input" type="tel" id="phone" placeholder="(305) 000-0000" autocomplete="tel" />
         </div>
       </div>
     </div>
-
-    <!-- ORDER SUMMARY -->
-    <div class="summary-card">
-      <div class="summary-title">Order Summary</div>
-      <div class="summary-row">
-        <span id="summary-service">HBOT Soft Chamber · 60 min</span>
-        <span id="summary-original">$149</span>
-      </div>
-      <div class="summary-row">
-        <span id="summary-date-time">Loading...</span>
-        <span></span>
-      </div>
-      <div class="summary-row">
-        <span class="savings">First Visit Discount</span>
-        <span class="savings">−$100</span>
-      </div>
-      <div class="summary-row total">
-        <span>Total Today</span>
-        <span id="summary-total">$49</span>
-      </div>
-    </div>
   </div>
 
-  <!-- ═══ SCREEN 4: STRIPE PAYMENT ═══ -->
-  <div class="screen" id="screen-4">
-    <button class="btn-back" onclick="goToScreen(3)">← Back</button>
-    <div class="card">
-      <div class="card-title">
-        Secure Payment
-        <span>Your booking is held for 10 minutes</span>
-      </div>
-      <div class="stripe-wrap">
-        <div class="stripe-header">
-          <div class="stripe-logo">stripe</div>
-          <div class="stripe-secure">🔒 Encrypted · Secure Checkout</div>
-        </div>
-        <div id="stripe-payment-element" style="min-height:120px;">
-          <div style="text-align:center;padding:40px 20px;color:#6B7280;font-size:14px;">
-            Loading secure payment form...
-          </div>
-        </div>
-        <div id="payment-message" style="color:#EF4444;font-size:14px;margin-top:12px;display:none;padding:10px;background:#FEF2F2;border-radius:8px;"></div>
-        <div class="secure-badge" style="margin-top:16px;">
-          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#6B7280;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-          Payments secured by Stripe. Healthspan never stores your card.
-        </div>
-      </div>
+  <!-- 5. PAYMENT -->
+  <div class="section locked" id="sec-payment">
+    <div class="section-header">
+      <div class="section-number">Step 5</div>
+      <div class="section-title">Secure Payment</div>
     </div>
-    <div class="summary-card">
-      <div class="summary-title">Charging Today</div>
-      <div class="summary-row total">
-        <span id="payment-summary-service">HBOT Soft Chamber · 60 min</span>
-        <span id="payment-summary-total">$49</span>
+    <div class="section-body">
+      <div class="summary-box" id="order-summary">
+        <div class="summary-row">
+          <span class="summary-label" id="sum-service">HBOT Session · 60 min</span>
+          <span class="summary-value" id="sum-original"></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label" id="sum-datetime">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-discount">First Visit Discount</span>
+          <span class="summary-discount" id="sum-discount"></span>
+        </div>
+        <div class="summary-row total">
+          <span>Total Today</span>
+          <span id="sum-total"></span>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ═══ SCREEN 5: CONFIRMATION ═══ -->
-  <div class="screen" id="screen-5">
-    <div class="card">
-      <div class="confirmation">
-        <div class="confirm-icon">✓</div>
-        <div class="confirm-title">You're booked!</div>
-        <div class="confirm-sub">
-          A confirmation has been sent to <strong id="confirm-email"></strong>.<br>
-          We'll see you soon at Healthspan Brickell.
+      <div id="stripe-payment-element">
+        <div style="text-align:center;padding:32px;color:#9CA3AF;font-size:14px;">
+          Loading secure payment form...
         </div>
-
-        <div class="confirm-details">
-          <div class="confirm-detail-row">
-            <div class="confirm-icon-sm">🫧</div>
-            <div class="confirm-detail-text">
-              <div class="confirm-detail-label">Service</div>
-              <div class="confirm-detail-value" id="confirm-service"></div>
-            </div>
-          </div>
-          <div class="confirm-detail-row">
-            <div class="confirm-icon-sm">📅</div>
-            <div class="confirm-detail-text">
-              <div class="confirm-detail-label">Date & Time</div>
-              <div class="confirm-detail-value" id="confirm-datetime"></div>
-            </div>
-          </div>
-          <div class="confirm-detail-row">
-            <div class="confirm-icon-sm">📍</div>
-            <div class="confirm-detail-text">
-              <div class="confirm-detail-label">Location</div>
-              <div class="confirm-detail-value">848 Brickell Ave, Suite 210<br>Miami, FL 33131</div>
-            </div>
-          </div>
-          <div class="confirm-detail-row">
-            <div class="confirm-icon-sm">👕</div>
-            <div class="confirm-detail-text">
-              <div class="confirm-detail-label">What to Bring</div>
-              <div class="confirm-detail-value">Comfortable clothes. Arrive 5 minutes early.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="membership-nudge">
-          <div class="nudge-title">Loved it? Join as a Member.</div>
-          <div class="nudge-sub">$299/mo — unlimited core services + HBOT at $49/session every time (the same price you paid today).</div>
-          <button class="btn-nudge" onclick="alert('Membership signup — coming soon!')">Learn About Membership →</button>
-        </div>
+      </div>
+      <div id="payment-message"></div>
+      <div class="stripe-secure">
+        🔒 Payments secured by Stripe · Healthspan never stores your card
       </div>
     </div>
   </div>
 
 </div><!-- /container -->
 
-<!-- BOTTOM ACTION BAR -->
-<div class="bottom-bar" id="bottom-bar">
-  <button class="btn-primary" id="main-btn" onclick="handleMainBtn()" disabled>
-    Select a Chamber to Continue
+<!-- CONFIRMATION (hidden until booking complete) -->
+<div class="container confirmation" id="confirmation">
+
+  <div class="confirm-hero">
+    <div class="confirm-check">✓</div>
+    <div class="confirm-title">You're booked!</div>
+    <div class="confirm-sub">
+      We're so excited to see you for your first session.<br>
+      A confirmation has been sent to <strong id="confirm-email"></strong>.
+    </div>
+  </div>
+
+  <div class="confirm-details-card">
+    <div class="confirm-details-title">Your Booking</div>
+    <div class="confirm-detail-row">
+      <div class="confirm-icon">🫧</div>
+      <div>
+        <div class="confirm-detail-label">Service</div>
+        <div class="confirm-detail-value" id="confirm-service"></div>
+      </div>
+    </div>
+    <div class="confirm-detail-row">
+      <div class="confirm-icon">📅</div>
+      <div>
+        <div class="confirm-detail-label">Date & Time</div>
+        <div class="confirm-detail-value" id="confirm-datetime"></div>
+      </div>
+    </div>
+    <div class="confirm-detail-row">
+      <div class="confirm-icon">📍</div>
+      <div>
+        <div class="confirm-detail-label">Location</div>
+        <div class="confirm-detail-value">848 Brickell Ave, Suite 210<br>Miami, FL 33131</div>
+      </div>
+    </div>
+    <div class="confirm-detail-row">
+      <div class="confirm-icon">👕</div>
+      <div>
+        <div class="confirm-detail-label">What to Bring</div>
+        <div class="confirm-detail-value">Comfortable, loose clothing. Arrive 5–10 minutes early. No metal jewelry inside the chamber.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="membership-card">
+    <div class="membership-card-title">Loved it? Become a Member.</div>
+    <div class="membership-card-sub">
+      Members pay just $49 per HBOT session every time — the same price you paid today — plus unlimited access to our full wellness studio.
+    </div>
+    <div class="membership-benefits">
+      <div class="benefit-row">
+        <div class="benefit-check">✓</div>
+        Unlimited daily sessions (Red Light, PEMF, Sauna, Cold Plunge + more)
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-check">✓</div>
+        HBOT at member pricing every session
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-check">✓</div>
+        Month-to-month · No contracts · Cancel anytime
+      </div>
+    </div>
+    <button class="btn-membership" onclick="window.open('https://www.healthspanrecovery.com/membership','_blank')">
+      Learn About Membership →
+    </button>
+  </div>
+
+  <a class="hbot-link-card" href="https://www.healthspanrecovery.com" target="_blank">
+    <div>
+      <div class="hbot-link-text">Have questions about Hyperbaric?</div>
+      <div class="hbot-link-sub">Read our FAQ and research on HBOT →</div>
+    </div>
+    <div class="hbot-link-arrow">→</div>
+  </a>
+
+</div>
+
+<!-- STICKY BOOK BUTTON -->
+<div class="book-bar" id="book-bar">
+  <button class="btn-book" id="book-btn" onclick="handleBookBtn()" disabled>
+    Select a chamber to get started
   </button>
 </div>
 
 <script>
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 // STRIPE
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 const stripe = Stripe('pk_live_51T4p9lILBp9JUOcYMXLlsifum9o0qwcLx9XwZPXrsTImxlQxPz0ctTHcAvaTAYsMYTsG0mHSjoI8sNTv0xBeAKuS003SwRnwhr');
 let stripeElements = null;
+let stripeInitialized = false;
 
-async function initStripePayment() {
-  try {
-    const amount = state.chamber === 'soft' ? 49 : 99;
-    const email = document.getElementById('email').value.trim();
-
-    const response = await fetch('/api/create-payment-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, chamber: state.chamber, email })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error);
-
-    stripeElements = stripe.elements({ clientSecret: data.clientSecret });
-    const paymentEl = stripeElements.create('payment', {
-      layout: 'tabs',
-      fields: { billingDetails: { email: 'never' } }
-    });
-    document.getElementById('stripe-payment-element').innerHTML = '';
-    paymentEl.mount('#stripe-payment-element');
-
-  } catch (e) {
-    const msg = document.getElementById('payment-message');
-    msg.textContent = 'Could not load payment form. Please refresh and try again.';
-    msg.style.display = 'block';
-  }
-}
-
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 // SUPABASE
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 const SUPABASE_URL = 'https://teflbpdoijlswupkjbun.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZmxicGRvaWpsc3d1cGtqYnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTgzNTcsImV4cCI6MjA5MDczNDM1N30.zBsAi4uY40RWpZRcKtLrEU0L8f1l9sM1UpJVdymDSJc';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Availability cache: { 'YYYY-MM-DD': { '9:00 AM': true/false } }
-// true = open, false = closed (staff override)
 let availabilityCache = {};
-// Booked slots from DB: { 'YYYY-MM-DD': ['9:00 AM', '11:00 AM'] }
 let bookedCache = {};
+
+function dateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 async function loadAvailability() {
   try {
     const today = new Date();
     const future = new Date(today);
     future.setDate(today.getDate() + 90);
-    const todayStr = dateStr(today);
-    const futureStr = dateStr(future);
 
-    // Load staff overrides
-    const { data: overrides } = await db
-      .from('availability_overrides')
-      .select('slot_date, slot_time, is_open')
-      .gte('slot_date', todayStr)
-      .lte('slot_date', futureStr);
+    const [{ data: overrides }, { data: bkgs }] = await Promise.all([
+      db.from('availability_overrides').select('slot_date,slot_time,is_open')
+        .gte('slot_date', dateStr(today)).lte('slot_date', dateStr(future)),
+      db.from('bookings').select('booking_date,booking_time')
+        .gte('booking_date', dateStr(today)).eq('status', 'confirmed')
+    ]);
 
     availabilityCache = {};
     (overrides || []).forEach(r => {
@@ -913,31 +891,19 @@ async function loadAvailability() {
       availabilityCache[r.slot_date][r.slot_time] = r.is_open;
     });
 
-    // Load existing bookings (to grey out taken slots)
-    const { data: bkgs } = await db
-      .from('bookings')
-      .select('booking_date, booking_time')
-      .gte('booking_date', todayStr)
-      .eq('status', 'confirmed');
-
     bookedCache = {};
     (bkgs || []).forEach(b => {
       if (!bookedCache[b.booking_date]) bookedCache[b.booking_date] = [];
       bookedCache[b.booking_date].push(b.booking_time);
     });
-
-  } catch (e) {
-    console.warn('Supabase unavailable, using defaults:', e.message);
+  } catch(e) {
+    console.warn('Availability load failed:', e.message);
   }
-}
-
-function dateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 async function saveBooking(booking) {
   try {
-    const { error } = await db.from('bookings').insert({
+    await db.from('bookings').insert({
       first_name: booking.firstName,
       last_name: booking.lastName,
       email: booking.email,
@@ -946,87 +912,47 @@ async function saveBooking(booking) {
       booking_date: dateStr(booking.date),
       booking_time: booking.time,
       amount_cents: booking.amount * 100,
-      utm_source: booking.utm.utm_source || null,
-      utm_medium: booking.utm.utm_medium || null,
-      utm_campaign: booking.utm.utm_campaign || null,
-      utm_content: booking.utm.utm_content || null,
-      utm_term: booking.utm.utm_term || null,
+      utm_source: state.utm.utm_source || null,
+      utm_medium: state.utm.utm_medium || null,
+      utm_campaign: state.utm.utm_campaign || null,
+      utm_content: state.utm.utm_content || null,
+      utm_term: state.utm.utm_term || null,
       status: 'confirmed'
     });
-    if (error) throw error;
-
-    // Update local cache so slot shows as booked immediately
     const ds = dateStr(booking.date);
     if (!bookedCache[ds]) bookedCache[ds] = [];
     bookedCache[ds].push(booking.time);
-
-  } catch (e) {
-    console.error('Could not save booking:', e.message);
-    // Don't block the user — booking still shows confirmation
+  } catch(e) {
+    console.error('Save booking failed:', e.message);
   }
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 // STATE
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 const state = {
-  chamber: null,         // 'soft' | 'hard'
-  selectedDate: null,    // Date object
-  selectedTime: null,    // '8:00 AM'
-  currentScreen: 1,
-  currentMonth: new Date(),
+  chamber: null,
+  date: null,
+  time: null,
+  calMonth: new Date(),
   utm: {}
 };
 
-// Capture UTM params on load
-(function captureUTM() {
-  const params = new URLSearchParams(window.location.search);
+// Capture UTMs
+(function() {
+  const p = new URLSearchParams(window.location.search);
   ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => {
-    if (params.get(k)) state.utm[k] = params.get(k);
+    if (p.get(k)) state.utm[k] = p.get(k);
   });
 })();
 
-// ════════════════════════════════════════
-// AVAILABILITY DATA
-// Times with 'booked: true' are unavailable
-// Staff will manage this via the admin panel (Phase 1b)
-// ════════════════════════════════════════
-const HOURS = {
-  weekday: [
-    { time: '7:00 AM', booked: false },
-    { time: '8:00 AM', booked: false },
-    { time: '9:00 AM', booked: true  },
-    { time: '10:00 AM', booked: false },
-    { time: '11:00 AM', booked: false },
-    { time: '12:00 PM', booked: true  },
-    { time: '1:00 PM', booked: false },
-    { time: '2:00 PM', booked: true  },
-    { time: '3:00 PM', booked: false },
-    { time: '4:00 PM', booked: false },
-    { time: '5:00 PM', booked: false },
-    { time: '6:00 PM', booked: true  },
-  ],
-  friday: [
-    { time: '7:00 AM', booked: false },
-    { time: '8:00 AM', booked: false },
-    { time: '9:00 AM', booked: false },
-    { time: '10:00 AM', booked: true  },
-    { time: '11:00 AM', booked: false },
-    { time: '12:00 PM', booked: false },
-    { time: '1:00 PM', booked: false },
-    { time: '2:00 PM', booked: false },
-    { time: '3:00 PM', booked: true  },
-    { time: '4:00 PM', booked: false },
-  ],
-  weekend: [
-    { time: '9:00 AM', booked: false },
-    { time: '10:00 AM', booked: false },
-    { time: '11:00 AM', booked: true  },
-    { time: '12:00 PM', booked: false },
-    { time: '1:00 PM', booked: false },
-    { time: '2:00 PM', booked: false },
-    { time: '3:00 PM', booked: true  },
-  ]
+// ════════════════════════════════════════════
+// TIME SLOT DEFINITIONS — 7 per day type
+// ════════════════════════════════════════════
+const SLOTS = {
+  weekday: ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','5:00 PM','7:00 PM'],
+  friday:  ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','4:00 PM','5:00 PM'],
+  weekend: ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM']
 };
 
 function getSlotsForDate(date) {
@@ -1036,301 +962,244 @@ function getSlotsForDate(date) {
   const booked = bookedCache[ds] || [];
 
   let base;
-  if (day === 5) base = HOURS.friday;
-  else if (day === 0 || day === 6) base = HOURS.weekend;
-  else base = HOURS.weekday;
+  if (day === 0 || day === 6) base = SLOTS.weekend;
+  else if (day === 5) base = SLOTS.friday;
+  else base = SLOTS.weekday;
 
-  // Apply overrides and real bookings from DB
-  return base.map(slot => {
-    const isBooked = booked.includes(slot.time);
-    if (isBooked) return { ...slot, booked: true };
-    if (overrides[slot.time] === false) return { ...slot, booked: true }; // staff closed
-    if (overrides[slot.time] === true) return { ...slot, booked: false };  // staff opened
-    return slot;
+  if (day === 0) return []; // Sunday closed
+
+  return base.map(time => {
+    const isBooked = booked.includes(time);
+    const override = overrides[time];
+    if (override === false) return { time, booked: true };
+    if (override === true)  return { time, booked: false };
+    return { time, booked: isBooked };
   });
 }
 
 function hasAvailability(date) {
-  const slots = getSlotsForDate(date);
-  return slots.some(s => !s.booked);
+  if (date.getDay() === 0) return false;
+  return getSlotsForDate(date).some(s => !s.booked);
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 // CHAMBER SELECTION
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 function selectChamber(type) {
   state.chamber = type;
-  document.getElementById('chamber-soft').classList.toggle('selected', type === 'soft');
-  document.getElementById('chamber-hard').classList.toggle('selected', type === 'hard');
+  state.date = null;
+  state.time = null;
+  stripeInitialized = false;
+  stripeElements = null;
 
-  const btn = document.getElementById('main-btn');
-  btn.disabled = false;
-  btn.textContent = type === 'soft'
-    ? 'Continue with Soft Chamber ($49) →'
-    : 'Continue with Hard Chamber ($99) →';
+  document.getElementById('card-soft').classList.toggle('selected', type === 'soft');
+  document.getElementById('card-hard').classList.toggle('selected', type === 'hard');
+
+  unlock('sec-date');
+  renderCalendar();
+  updateBookBtn();
+  scrollTo('sec-date');
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
 // CALENDAR
-// ════════════════════════════════════════
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+// ════════════════════════════════════════════
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function renderCalendar() {
   const now = new Date();
-  const year = state.currentMonth.getFullYear();
-  const month = state.currentMonth.getMonth();
-
-  document.getElementById('month-label').textContent = `${MONTHS[month]} ${year}`;
+  const year = state.calMonth.getFullYear();
+  const month = state.calMonth.getMonth();
+  document.getElementById('month-label').textContent = `${MONTH_NAMES[month]} ${year}`;
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const grid = document.getElementById('calendar-grid');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const grid = document.getElementById('cal-grid');
   grid.innerHTML = '';
 
-  // Empty cells
   for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'cal-day empty';
-    grid.appendChild(empty);
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    grid.appendChild(el);
   }
-
-  const today = new Date(); today.setHours(0,0,0,0);
 
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
     const isPast = date < today;
-    const hasSlots = !isPast && hasAvailability(date);
-    const isSelected = state.selectedDate &&
-      state.selectedDate.toDateString() === date.toDateString();
     const isToday = date.toDateString() === today.toDateString();
+    const hasSlots = !isPast && hasAvailability(date);
+    const isSelected = state.date && state.date.toDateString() === date.toDateString();
 
-    const cell = document.createElement('div');
-    cell.textContent = d;
-    cell.className = 'cal-day' +
+    const el = document.createElement('div');
+    el.textContent = d;
+    el.className = 'cal-day' +
       (isPast ? ' past' : '') +
-      (!isPast && !hasSlots ? ' no-avail' : '') +
-      (hasSlots ? ' has-slots' : '') +
+      (hasSlots ? ' available' : (!isPast ? ' no-slots' : '')) +
       (isSelected ? ' selected' : '') +
       (isToday ? ' today' : '');
 
-    if (hasSlots) {
-      cell.onclick = () => selectDate(date);
-    }
-    grid.appendChild(cell);
+    if (hasSlots) el.onclick = () => selectDate(date);
+    grid.appendChild(el);
   }
 }
 
 function prevMonth() {
   const now = new Date();
-  if (state.currentMonth.getFullYear() === now.getFullYear() &&
-      state.currentMonth.getMonth() === now.getMonth()) return;
-  state.currentMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() - 1);
+  if (state.calMonth.getFullYear() === now.getFullYear() &&
+      state.calMonth.getMonth() === now.getMonth()) return;
+  state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth() - 1);
   renderCalendar();
 }
 function nextMonth() {
-  state.currentMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() + 1);
+  state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth() + 1);
   renderCalendar();
 }
 
 function selectDate(date) {
-  state.selectedDate = date;
-  state.selectedTime = null;
+  state.date = date;
+  state.time = null;
+  stripeInitialized = false;
   renderCalendar();
-  renderTimeSlots(date);
-
-  document.getElementById('main-btn').disabled = true;
-  document.getElementById('main-btn').textContent = 'Select a Time to Continue';
+  renderTimeSlots();
+  unlock('sec-time');
+  updateBookBtn();
+  scrollTo('sec-time');
 }
 
-function renderTimeSlots(date) {
-  const slots = getSlotsForDate(date);
-  const section = document.getElementById('time-section');
-  const container = document.getElementById('time-slots');
-  const title = document.getElementById('time-section-title');
+// ════════════════════════════════════════════
+// TIME SLOTS
+// ════════════════════════════════════════════
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  section.style.display = 'block';
-  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  title.textContent = `${dayNames[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+function renderTimeSlots() {
+  const slots = getSlotsForDate(state.date);
+  const grid = document.getElementById('time-grid');
+  const d = state.date;
+  document.getElementById('time-title').textContent =
+    `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`;
 
-  container.innerHTML = '';
-  slots.forEach(slot => {
-    const el = document.createElement('div');
-    el.className = 'time-slot' + (slot.booked ? ' booked' : '');
-    el.innerHTML = `<div>${slot.time}</div>`;
-    if (!slot.booked) {
-      el.onclick = () => selectTime(slot.time, el);
-    }
-    container.appendChild(el);
-  });
+  grid.innerHTML = slots.map(s => `
+    <div class="time-pill ${s.booked ? 'booked' : ''} ${state.time === s.time ? 'selected' : ''}"
+      ${!s.booked ? `onclick="selectTime('${s.time}')"` : ''}>
+      ${s.time}
+    </div>
+  `).join('');
 }
 
-function selectTime(time, el) {
-  state.selectedTime = time;
-  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-  el.classList.add('selected');
-
-  const btn = document.getElementById('main-btn');
-  btn.disabled = false;
-  btn.textContent = 'Continue →';
+function selectTime(time) {
+  state.time = time;
+  renderTimeSlots();
+  unlock('sec-info');
+  unlock('sec-payment');
+  updateSummary();
+  updateBookBtn();
+  if (!stripeInitialized) initStripePayment();
+  scrollTo('sec-info');
 }
 
-// ════════════════════════════════════════
-// NAVIGATION
-// ════════════════════════════════════════
-function goToScreen(n) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(`screen-${n}`).classList.add('active');
-  state.currentScreen = n;
-  updateProgressBar(n);
-  updateBottomBar(n);
-  window.scrollTo(0, 0);
-}
-
-function updateProgressBar(screen) {
-  // Step dots
-  [1,2,3].forEach(i => {
-    const el = document.getElementById(`step-indicator-${i}`);
-    el.style.opacity = '1';
-    el.classList.remove('active','done');
-    if (i < screen && screen <= 4) el.classList.add('done');
-    else if (i === Math.min(screen, 3)) el.classList.add('active');
-    else el.style.opacity = '0.4';
-  });
-  const line1 = document.getElementById('line-1');
-  const line2 = document.getElementById('line-2');
-  line1.classList.toggle('done', screen >= 3);
-  line2.classList.toggle('done', screen >= 4);
-  // Hide bar on confirmation
-  document.querySelector('.progress-wrap').style.display = screen === 5 ? 'none' : '';
-  document.querySelector('.offer-banner').style.display = screen === 5 ? 'none' : '';
-}
-
-function updateBottomBar(screen) {
-  const bar = document.getElementById('bottom-bar');
-  const btn = document.getElementById('main-btn');
-
-  if (screen === 5) { bar.style.display = 'none'; return; }
-  bar.style.display = '';
-
-  if (screen === 1) {
-    btn.textContent = state.chamber ? 'Continue →' : 'Select a Chamber to Continue';
-    btn.disabled = !state.chamber;
-  } else if (screen === 2) {
-    btn.textContent = state.selectedTime ? 'Continue →' : 'Select a Time to Continue';
-    btn.disabled = !state.selectedTime;
-  } else if (screen === 3) {
-    btn.textContent = `Review & Pay ${state.chamber === 'soft' ? '$49' : '$99'} →`;
-    btn.disabled = false;
-  } else if (screen === 4) {
-    btn.textContent = `Pay ${state.chamber === 'soft' ? '$49' : '$99'} Securely →`;
-    btn.disabled = false;
-  }
-}
-
-function handleMainBtn() {
-  if (state.currentScreen === 1) {
-    goToScreen(2);
-    renderCalendar();
-    document.getElementById('screen2-subtitle').textContent =
-      state.chamber === 'soft' ? 'Soft Chamber · 60 min · $49' : 'Hard Chamber · 60 min · $99';
-
-  } else if (state.currentScreen === 2) {
-    goToScreen(3);
-    updateSummary();
-
-  } else if (state.currentScreen === 3) {
-    if (!validateContact()) return;
-    goToScreen(4);
-    document.getElementById('payment-summary-service').textContent =
-      state.chamber === 'soft' ? 'HBOT Soft Chamber · 60 min' : 'HBOT Hard Chamber · 60 min';
-    document.getElementById('payment-summary-total').textContent =
-      state.chamber === 'soft' ? '$49' : '$99';
-    initStripePayment();
-
-  } else if (state.currentScreen === 4) {
-    processPayment();
-  }
-}
-
-// ════════════════════════════════════════
-// SUMMARY
-// ════════════════════════════════════════
+// ════════════════════════════════════════════
+// ORDER SUMMARY
+// ════════════════════════════════════════════
 function updateSummary() {
   const isSoft = state.chamber === 'soft';
-  document.getElementById('summary-service').textContent =
+  document.getElementById('sum-service').textContent =
     isSoft ? 'HBOT Soft Chamber · 60 min' : 'HBOT Hard Chamber · 60 min';
-  document.getElementById('summary-original').textContent = isSoft ? '$149' : '$199';
-  document.getElementById('summary-total').textContent = isSoft ? '$49' : '$99';
+  document.getElementById('sum-original').textContent = isSoft ? '$149' : '$199';
+  document.getElementById('sum-discount').textContent = '−$100';
+  document.getElementById('sum-total').textContent = isSoft ? '$49' : '$99';
 
-  if (state.selectedDate && state.selectedTime) {
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const d = state.selectedDate;
-    document.getElementById('summary-date-time').textContent =
-      `${dayNames[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()} · ${state.selectedTime}`;
+  if (state.date && state.time) {
+    const d = state.date;
+    document.getElementById('sum-datetime').textContent =
+      `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()} · ${state.time}`;
   }
 }
 
-// ════════════════════════════════════════
-// VALIDATION
-// ════════════════════════════════════════
-function validateContact() {
-  const fields = ['fname','lname','email','phone'];
-  let valid = true;
-  fields.forEach(id => {
+// ════════════════════════════════════════════
+// BOOK BUTTON
+// ════════════════════════════════════════════
+function updateBookBtn() {
+  const btn = document.getElementById('book-btn');
+  if (!state.chamber) {
+    btn.textContent = 'Select a chamber to get started';
+    btn.disabled = true;
+  } else if (!state.date) {
+    btn.textContent = 'Pick a date to continue';
+    btn.disabled = true;
+  } else if (!state.time) {
+    btn.textContent = 'Choose a time to continue';
+    btn.disabled = true;
+  } else {
+    const price = state.chamber === 'soft' ? '$49' : '$99';
+    btn.textContent = `Book My Session · ${price}`;
+    btn.disabled = false;
+  }
+}
+
+async function handleBookBtn() {
+  if (!validateInfo()) return;
+  await completeBooking();
+}
+
+// ════════════════════════════════════════════
+// STRIPE
+// ════════════════════════════════════════════
+async function initStripePayment() {
+  stripeInitialized = true;
+  try {
+    const amount = state.chamber === 'soft' ? 49 : 99;
+    const email = document.getElementById('email').value.trim() || 'guest@healthspan.com';
+
+    const res = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, chamber: state.chamber, email })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    stripeElements = stripe.elements({ clientSecret: data.clientSecret });
+    const el = stripeElements.create('payment', { layout: 'tabs' });
+    document.getElementById('stripe-payment-element').innerHTML = '';
+    el.mount('#stripe-payment-element');
+  } catch(e) {
+    document.getElementById('stripe-payment-element').innerHTML =
+      '<div style="color:#EF4444;font-size:14px;padding:16px;background:#FEF2F2;border-radius:8px;">Could not load payment form. Please refresh and try again.</div>';
+  }
+}
+
+// ════════════════════════════════════════════
+// COMPLETE BOOKING
+// ════════════════════════════════════════════
+function validateInfo() {
+  let ok = true;
+  ['fname','lname','email','phone'].forEach(id => {
     const el = document.getElementById(id);
-    if (!el.value.trim()) {
-      el.classList.add('error');
-      valid = false;
-    } else {
-      el.classList.remove('error');
-    }
+    if (!el.value.trim()) { el.classList.add('error'); ok = false; }
+    else el.classList.remove('error');
   });
-  // Email format
   const email = document.getElementById('email');
   if (email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    email.classList.add('error');
-    valid = false;
+    email.classList.add('error'); ok = false;
   }
-  return valid;
+  if (!ok) scrollTo('sec-info');
+  return ok;
 }
 
-function validatePayment() {
-  const num = document.getElementById('card-number').value.replace(/\s/g,'');
-  const exp = document.getElementById('card-expiry').value;
-  const cvc = document.getElementById('card-cvc').value;
-  const name = document.getElementById('card-name').value;
-  return num.length >= 15 && exp.length === 5 && cvc.length >= 3 && name.trim().length > 0;
-}
-
-// ════════════════════════════════════════
-// PAYMENT FORMATTING
-// ════════════════════════════════════════
-function formatCard(el) {
-  let v = el.value.replace(/\D/g,'').substring(0,16);
-  el.value = v.replace(/(.{4})/g,'$1 ').trim();
-}
-function formatExpiry(el) {
-  let v = el.value.replace(/\D/g,'').substring(0,4);
-  if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
-  el.value = v;
-}
-
-// ════════════════════════════════════════
-// PROCESS PAYMENT (Demo — Stripe connects here)
-// ════════════════════════════════════════
-async function processPayment() {
-  const btn = document.getElementById('main-btn');
+async function completeBooking() {
+  const btn = document.getElementById('book-btn');
   btn.textContent = 'Processing...';
   btn.disabled = true;
-  document.getElementById('payment-message').style.display = 'none';
 
-  // Confirm real Stripe payment
+  const msgEl = document.getElementById('payment-message');
+  msgEl.style.display = 'none';
+
   if (!stripeElements) {
-    const msg = document.getElementById('payment-message');
-    msg.textContent = 'Payment form not ready. Please wait a moment and try again.';
-    msg.style.display = 'block';
-    btn.textContent = `Pay ${state.chamber === 'soft' ? '$49' : '$99'} Securely →`;
+    msgEl.textContent = 'Payment form is loading. Please wait a moment and try again.';
+    msgEl.style.display = 'block';
+    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
@@ -1345,46 +1214,58 @@ async function processPayment() {
   });
 
   if (stripeError) {
-    const msg = document.getElementById('payment-message');
-    msg.textContent = stripeError.message;
-    msg.style.display = 'block';
-    btn.textContent = `Pay ${state.chamber === 'soft' ? '$49' : '$99'} Securely →`;
+    msgEl.textContent = stripeError.message;
+    msgEl.style.display = 'block';
+    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
 
-  // Payment succeeded — save to Supabase and show confirmation
+  // Payment success
   const booking = {
     firstName: document.getElementById('fname').value.trim(),
-    lastName: document.getElementById('lname').value.trim(),
-    chamber: state.chamber,
-    date: state.selectedDate,
-    time: state.selectedTime,
-    email: document.getElementById('email').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
-    amount: state.chamber === 'soft' ? 49 : 99,
-    utm: state.utm
+    lastName:  document.getElementById('lname').value.trim(),
+    email:     document.getElementById('email').value.trim(),
+    phone:     document.getElementById('phone').value.trim(),
+    chamber:   state.chamber,
+    date:      state.date,
+    time:      state.time,
+    amount:    state.chamber === 'soft' ? 49 : 99
   };
 
-  saveBooking(booking).finally(() => {
-    showConfirmation(booking);
-  });
+  await saveBooking(booking);
+  showConfirmation(booking);
 }
 
 function showConfirmation(booking) {
-  goToScreen(5);
+  document.getElementById('booking-form').style.display = 'none';
+  document.getElementById('book-bar').style.display = 'none';
+  const conf = document.getElementById('confirmation');
+  conf.classList.add('visible');
+
   document.getElementById('confirm-email').textContent = booking.email;
   document.getElementById('confirm-service').textContent =
     booking.chamber === 'soft' ? 'Soft Hyperbaric Chamber · 60 min' : 'Hard Hyperbaric Chamber · 60 min';
 
   const d = booking.date;
-  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   document.getElementById('confirm-datetime').textContent =
-    `${dayNames[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} at ${booking.time}`;
+    `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()} at ${booking.time}`;
 
-  // Hide payment button, scroll to top
-  document.getElementById('bottom-bar').style.display = 'none';
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function unlock(id) {
+  document.getElementById(id).classList.remove('locked');
+}
+
+function scrollTo(id) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 // Clear error on input
@@ -1392,7 +1273,12 @@ document.querySelectorAll('.field-input').forEach(el => {
   el.addEventListener('input', () => el.classList.remove('error'));
 });
 
-// Load real availability from Supabase, then render
+// Reinitialize Stripe when email is filled (better accuracy)
+document.getElementById('email').addEventListener('blur', () => {
+  if (state.time && !stripeInitialized) initStripePayment();
+});
+
+// Init
 loadAvailability().then(() => renderCalendar());
 </script>
 </body>

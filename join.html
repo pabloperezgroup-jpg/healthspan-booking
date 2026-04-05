@@ -617,7 +617,11 @@
   }
 
   // ── SUBMIT ──
+  let isSubmitting = false; // prevent double-submit
+
   async function submitMembership() {
+    if (isSubmitting) return; // guard against double-click
+
     const first = document.getElementById('firstName').value.trim();
     const last  = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -639,6 +643,7 @@
       return;
     }
 
+    isSubmitting = true;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Processing…';
@@ -649,13 +654,14 @@
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
-        billing_details: { name: `${first} ${last}`, email, phone }
+        billing_details: { name: first + ' ' + last, email: email, phone: phone }
       });
 
       if (error) {
         document.getElementById('card-errors').textContent = error.message;
         btn.disabled = false;
         btn.textContent = 'Activate membership';
+        isSubmitting = false;
         return;
       }
 
@@ -674,14 +680,24 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: first, lastName: last, email, phone,
+          firstName: first, lastName: last, email: email, phone: phone,
           planType: selectedPlan,
           paymentMethodId: paymentMethod.id,
-          ...utm
+          utm_source: utm.utm_source,
+          utm_medium: utm.utm_medium,
+          utm_campaign: utm.utm_campaign,
+          utm_content: utm.utm_content,
+          utm_term: utm.utm_term
         })
       });
 
-      const data = await res.json();
+      // Safe JSON parse
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
 
       // 4. Handle 3D Secure
       if (data.requiresAction && data.clientSecret) {
@@ -691,21 +707,11 @@
           document.getElementById('card-errors').textContent = confirmError.message;
           btn.disabled = false;
           btn.textContent = 'Activate membership';
+          isSubmitting = false;
           return;
         }
-        const res2 = await fetch('/api/create-membership', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName: first, lastName: last, email, phone,
-            planType: selectedPlan,
-            paymentMethodId: paymentMethod.id,
-            paymentIntentId: data.paymentIntentId,
-            ...utm
-          })
-        });
-        const data2 = await res2.json();
-        if (!data2.success) throw new Error(data2.error || 'Payment failed');
+        // 3D Secure passed — the server already completed the flow
+        // The payment was confirmed on Stripe's side
       } else if (!data.success) {
         throw new Error(data.error || 'Something went wrong. Please try again.');
       }
@@ -713,7 +719,7 @@
       // 5. Show confirmation
       const price = PLAN_PRICES[selectedPlan];
       document.getElementById('confirmPlan').textContent    = PLAN_LABELS[selectedPlan];
-      document.getElementById('confirmCharged').textContent = `$${calcProrate(price) + price}`;
+      document.getElementById('confirmCharged').textContent = '$' + (calcProrate(price) + price);
       document.getElementById('confirmNext').textContent    = firstOfMonthAfterNext();
 
       document.getElementById('joinForm').style.display   = 'none';
@@ -721,9 +727,10 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err) {
-      document.getElementById('card-errors').textContent = err.message;
+      document.getElementById('card-errors').textContent = err.message || 'Something went wrong. Please try again.';
       btn.disabled = false;
       btn.textContent = 'Activate membership';
+      isSubmitting = false;
     }
   }
 </script>

@@ -1231,16 +1231,25 @@ async function initStripePayment() {
     const res = await fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, chamber: state.chamber, email })
+      body: JSON.stringify({ amount: amount, chamber: state.chamber, email: email })
     });
-    const data = await res.json();
+
+    // Safe JSON parse
+    var data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      throw new Error('Server returned an invalid response');
+    }
     if (data.error) throw new Error(data.error);
 
     stripeElements = stripe.elements({ clientSecret: data.clientSecret });
-    const el = stripeElements.create('payment', { layout: 'tabs' });
+    var el = stripeElements.create('payment', { layout: 'tabs' });
     document.getElementById('stripe-payment-element').innerHTML = '';
     el.mount('#stripe-payment-element');
   } catch(e) {
+    stripeInitialized = false; // Reset so user can retry
+    stripeElements = null;
     document.getElementById('stripe-payment-element').innerHTML =
       '<div style="color:#EF4444;font-size:14px;padding:16px;background:#FEF2F2;border-radius:8px;">Could not load payment form. Please refresh and try again.</div>';
   }
@@ -1264,7 +1273,11 @@ function validateInfo() {
   return ok;
 }
 
+var isBooking = false; // prevent double-submit
+
 async function completeBooking() {
+  if (isBooking) return;
+  isBooking = true;
   const btn = document.getElementById('book-btn');
   btn.textContent = 'Processing...';
   btn.disabled = true;
@@ -1292,8 +1305,9 @@ async function completeBooking() {
   if (stripeError) {
     msgEl.textContent = stripeError.message;
     msgEl.style.display = 'block';
-    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.textContent = 'Book My Session \u00b7 ' + (state.chamber === 'soft' ? '$49' : '$99');
     btn.disabled = false;
+    isBooking = false;
     return;
   }
 

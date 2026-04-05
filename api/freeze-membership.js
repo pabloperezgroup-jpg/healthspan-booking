@@ -1,5 +1,5 @@
-// Vercel Serverless Function: /api/freeze-membership
-// Pauses a member's Stripe subscription and updates Supabase status.
+// Vercel Serverless Function: /api/unfreeze-membership
+// Resumes a frozen Stripe subscription and updates Supabase.
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    var { email, reason } = req.body;
+    var { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -32,26 +32,26 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    if (member.status === 'frozen') {
-      return res.status(400).json({ error: 'Membership is already frozen' });
+    if (member.status !== 'frozen') {
+      return res.status(400).json({ error: 'Membership is not currently frozen' });
     }
 
     if (!member.stripe_subscription_id) {
-      return res.status(400).json({ error: 'No active subscription found' });
+      return res.status(400).json({ error: 'No subscription found' });
     }
 
-    // Pause the Stripe subscription
+    // Resume the Stripe subscription (remove pause_collection)
     await stripe.subscriptions.update(member.stripe_subscription_id, {
-      pause_collection: { behavior: 'void' },
-      metadata: { freeze_reason: reason || 'Member requested freeze' }
+      pause_collection: ''
     });
 
     // Update Supabase
     var { error: updateErr } = await supabase
       .from('members')
       .update({
-        status: 'frozen',
-        freeze_start: new Date().toISOString()
+        status: 'active',
+        freeze_start: null,
+        freeze_end: new Date().toISOString()
       })
       .eq('email', normalizedEmail);
 
@@ -64,8 +64,8 @@ module.exports = async (req, res) => {
       await supabase.from('member_activity').insert({
         member_id: member.id,
         email: normalizedEmail,
-        action: 'freeze',
-        details: JSON.stringify({ reason: reason || 'Member requested freeze' })
+        action: 'unfreeze',
+        details: JSON.stringify({ resumed_at: new Date().toISOString() })
       });
     } catch (logErr) {
       console.error('Activity log error:', logErr);
@@ -73,12 +73,10 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      status: 'frozen',
-      message: 'Membership frozen successfully. No charges will be made until unfrozen.'
+      status: 'active',
+      message: 'Membership reactivated. Regular billing will resume.'
     });
 
   } catch (err) {
-    console.error('freeze-membership error:', err);
-    return res.status(500).json({ error: err.message || 'Failed to freeze membership' });
-  }
-};
+    console.error('unfreeze-membership error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to unfreeze membe

@@ -1,0 +1,10 @@
+{
+  "name": "healthspan-booking",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "resend": "^3.0.0"
+  }
+}

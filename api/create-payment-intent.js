@@ -1,44 +1,59 @@
-// Vercel Serverless Function — Stripe Payment Intent
-// Secret key stored safely in Vercel environment variables (never in code)
+// Vercel Serverless Function: /api/create-payment-intent
+// Creates a Stripe PaymentIntent for the booking page (HBOT sessions).
+// Used by index.html when a customer books their first session.
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-  const { amount, chamber, email } = req.body;
-
-  if (!amount || !chamber || !email) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+module.exports = async (req, res) => {
+  // ── CORS ──
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const response = await fetch('https://api.stripe.com/v1/payment_intents', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        amount: String(Math.round(amount * 100)),
-        currency: 'usd',
-        receipt_email: email,
-        'metadata[chamber]': chamber,
-        'metadata[source]': 'healthspan-booking',
-        'automatic_payment_methods[enabled]': 'true'
-      })
-    });
+    var { amount, chamber, email } = req.body;
 
-    const paymentIntent = await response.json();
-
-    if (!response.ok) {
-      throw new Error(paymentIntent.error?.message || 'Stripe error');
+    // ── Validate ──
+    if (!amount || !chamber) {
+      return res.status(400).json({ error: 'Missing required fields: amount, chamber' });
     }
 
-    return res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    // Validate chamber type and amount match
+    var validAmounts = { soft: 49, hard: 99 };
+    if (!validAmounts[chamber]) {
+      return res.status(400).json({ error: 'Invalid chamber type' });
+    }
+    // Use server-side price (don't trust client amount)
+    var amountCents = validAmounts[chamber] * 100;
+
+    // Clean email
+    var customerEmail = (email || 'guest@healthspan.com').toLowerCase().trim();
+
+    // ── Create PaymentIntent ──
+    var paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: 'usd',
+      receipt_email: customerEmail,
+      metadata: {
+        type: 'hbot_booking',
+        chamber: chamber,
+        original_price: chamber === 'soft' ? '149' : '199',
+        discount: '100',
+        customer_email: customerEmail
+      },
+      automatic_payment_methods: { enabled: true }
+    });
+
+    return res.status(200).json({
+      clientSecret: paymentIntent.client_secret
+    });
 
   } catch (err) {
-    console.error('Stripe error:', err.message);
-    return res.status(500).json({ error: err.message });
+    console.error('create-payment-intent error:', err);
+    return res.status(500).json({
+      error: err.message || 'Failed to create payment. Please try again.'
+    });
   }
-}
+};

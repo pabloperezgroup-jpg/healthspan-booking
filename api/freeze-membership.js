@@ -51,8 +51,7 @@ module.exports = async (req, res) => {
       .from('members')
       .update({
         status: 'frozen',
-        freeze_date: new Date().toISOString(),
-        freeze_reason: reason || null
+        freeze_start: new Date().toISOString()
       })
       .eq('email', normalizedEmail);
 

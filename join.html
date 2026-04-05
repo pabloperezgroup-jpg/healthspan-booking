@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Become a Member · Healthspan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #0A7C6B;
+      --teal-dark: #065C4F;
+      --teal-light: #F0FAF8;
+      --navy: #0D1B2A;
+      --gray: #6B7280;
+      --gray-light: #F7F8F9;
+      --border: #E8EAED;
+      --white: #FFFFFF;
+      --success: #10B981;
+      --error: #EF4444;
+      --gold: #F59E0B;
+      --gold-light: #FFFBEB;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--gray-light);
+      color: var(--navy);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+    .logo span { color: var(--teal); }
+    .header-contact { font-size: 13px; color: var(--gray); }
+    .header-contact a { color: var(--teal); text-decoration: none; font-weight: 600; }
+
+    /* OFFER STRIP */
+    .offer-strip {
+      background: var(--navy);
+      color: white;
+      text-align: center;
+      padding: 11px 24px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .offer-strip span { color: #5EEAD4; }
+
+    /* CONTAINER */
+    .container { max-width: 600px; margin: 0 auto; padding: 24px 16px 100px; }
+
+    /* PROGRESS */
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding-top: 4px;
+    }
+    .step-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      transition: all 0.3s ease;
+    }
+    .step-dot.active { background: var(--teal); color: white; }
+    .step-dot.done { background: var(--success); color: white; }
+    .step-dot.inactive { background: var(--border); color: var(--gray); }
+    .step-line { width: 40px; height: 2px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
+    .step-line.done { background: var(--success); }
+
+    /* SECTION CARD */
+    .section {
+      background: var(--white);
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.07);
+      margin-bottom: 16px;
+      overflow: hidden;
+      display: none;
+    }
+    .section.active { display: block; }
+    .section-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-number {
+      display: inline-flex; align-items: center;
+      background: var(--teal); color: white;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 4px 10px; border-radius: 20px; margin-bottom: 8px;
+    }
+    .section-title { font-size: 20px; font-weight: 800; color: var(--navy); letter-spacing: -0.4px; }
+    .section-sub { font-size: 13px; color: var(--gray); margin-top: 4px; }
+    .section-body { padding: 20px 22px; }
+
+    /* PLAN CARDS */
+    .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .plan-card {
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #F8FAFB;
+      position: relative;
+      text-align: center;
+    }
+    .plan-card:hover { border-color: var(--teal); background: var(--teal-light); transform: translateY(-2px); }
+    .plan-card.selected { border-color: var(--teal); background: var(--teal-light); }
+    .plan-card.selected::after {
+      content: '✓';
+      position: absolute; top: 10px; right: 12px;
+      background: var(--teal); color: white;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+    }
+    .plan-badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 8px; border-radius: 20px; margin-bottom: 10px;
+    }
+    .plan-badge.regular { background: #E0F2F1; color: var(--teal-dark); }
+    .plan-badge.vip { background: var(--gold-light); color: #92400E; }
+    .plan-name { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+    .plan-price { font-size: 26px; font-weight: 800; color: var(--teal); letter-spacing: -1px; }
+    .plan-price span { font-size: 13px; font-weight: 500; color: var(--gray); }
+    .plan-sessions {
+      font-size: 12px; font-weight: 700; color: var(--navy);
+      background: rgba(10,124,107,0.08); border-radius: 8px;
+      padding: 5px 8px; margin: 10px 0 12px;
+    }
+    .plan-features { list-style: none; text-align: left; }
+    .plan-features li {
+      font-size: 12px; color: var(--gray); padding: 3px 0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .plan-features li::before { content: '✓'; color: var(--teal); font-weight: 800; font-size: 11px; flex-shrink: 0; }
+
+    .plan-note {
+      font-size: 12px; color: var(--gray); text-align: center;
+      margin-top: 14px; line-height: 1.5;
+      padding: 10px 12px; background: var(--gray-light);
+      border-radius: 10px;
+    }
+
+    /* FORM FIELDS */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field input {
+      width: 100%; padding: 13px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 15px; color: var(--navy);
+      background: white; outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--teal); }
+    .field input::placeholder { color: #C1C7D0; }
+
+    /* PAYMENT SUMMARY BOX */
+    .pay-summary {
+      background: var(--teal-light);
+      border: 1.5px solid rgba(10,124,107,0.2);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+    .pay-summary-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--teal-dark); margin-bottom: 12px; }
+    .pay-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pay-row-label { font-size: 13px; color: var(--gray); }
+    .pay-row-amount { font-size: 13px; font-weight: 700; color: var(--navy); }
+    .pay-divider { height: 1px; background: rgba(10,124,107,0.15); margin: 10px 0; }
+    .pay-total-row { display: flex; justify-content: space-between; align-items: center; }
+    .pay-total-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .pay-total-amount { font-size: 22px; font-weight: 800; color: var(--teal); letter-spacing: -0.5px; }
+    .pay-then { font-size: 12px; color: var(--gray); margin-top: 8px; text-align: center; }
+
+    /* STRIPE CARD */
+    .card-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    #card-element {
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 13px 14px; background: white;
+      transition: border-color 0.2s;
+    }
+    #card-element.focused { border-color: var(--teal); }
+    #card-errors { color: var(--error); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%; padding: 16px;
+      background: var(--teal); color: white;
+      border: none; border-radius: 12px;
+      font-family: inherit; font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s ease;
+      letter-spacing: -0.2px;
+      margin-top: 16px;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-back {
+      background: none; border: none; color: var(--gray);
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; padding: 8px 0; display: inline-flex; align-items: center; gap: 4px;
+      margin-bottom: 8px;
+    }
+    .btn-back:hover { color: var(--navy); }
+
+    /* TRUST ROW */
+    .trust-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-top: 14px; flex-wrap: wrap;
+    }
+    .trust-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--gray); }
+    .trust-item svg { width: 14px; height: 14px; color: var(--teal); flex-shrink: 0; }
+
+    /* CONFIRMATION */
+    #confirmation { display: none; }
+    #confirmation.active { display: block; }
+    .confirm-card {
+      background: white; border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.07);
+      padding: 40px 24px; text-align: center;
+    }
+    .confirm-icon { font-size: 52px; margin-bottom: 16px; }
+    .confirm-title { font-size: 24px; font-weight: 800; color: var(--navy); margin-bottom: 8px; letter-spacing: -0.5px; }
+    .confirm-sub { font-size: 15px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+    .confirm-detail {
+      background: var(--gray-light); border-radius: 12px;
+      padding: 16px; text-align: left; margin-bottom: 20px;
+    }
+    .confirm-detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .confirm-detail-row span:first-child { color: var(--gray); }
+    .confirm-detail-row span:last-child { font-weight: 700; color: var(--navy); }
+    .confirm-btn {
+      display: block; width: 100%; padding: 15px;
+      background: var(--teal); color: white;
+      border: none; border-radius: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .confirm-btn:hover { background: var(--teal-dark); }
+
+    /* SPINNER */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 480px) {
+      .plan-grid { grid-template-columns: 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+      .plan-price { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">Health<span>span</span></div>
+  <div class="header-contact">
+    Questions? <a href="tel:786-713-1222">786-713-1222</a>
+  </div>
+</header>
+
+<div class="offer-strip">
+  Founding Member Rate — <span>Lock it in today. Prices will increase.</span>
+</div>
+
+<div class="container">
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar" id="progressBar">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot inactive" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot inactive" id="dot3">3</div>
+  </div>
+
+  <!-- STEP 1: PLAN -->
+  <div class="section active" id="step1">
+    <div class="section-header">
+      <div class="section-number">Step 1 of 3</div>
+      <div class="section-title">Choose your plan</div>
+      <div class="section-sub">Month-to-month. Cancel or freeze anytime.</div>
+    </div>
+    <div class="section-body">
+      <div class="plan-grid">
+        <!-- REGULAR -->
+        <div class="plan-card" id="card-regular" onclick="selectPlan('regular')">
+          <div class="plan-badge regular">Regular</div>
+          <div class="plan-name">Member</div>
+          <div class="plan-price">$299<span>/mo</span></div>
+          <div class="plan-sessions">Up to 3 sessions / day</div>
+          <ul class="plan-features">
+            <li>All core services</li>
+            <li>HBOT at member rate</li>
+            <li>IV at member rate</li>
+            <li>Self-service booking</li>
+            <li>QR check-in</li>
+          </ul>
+        </div>
+        <!-- VIP -->
+        <div class="plan-card" id="card-vip" onclick="selectPlan('vip')">
+          <div class="plan-badge vip">VIP</div>
+          <div class="plan-name">VIP Member</div>
+          <div class="plan-price">$499<span>/mo</span></div>
+          <div class="plan-sessions">Up to 5 sessions / day</div>
+          <ul class="plan-features">
+            <li>All core services</li>
+            <li>HBOT at member rate</li>
+            <li>IV at member rate</li>
+            <li>Priority booking</li>
+            <li>QR check-in</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="plan-note">
+        HBOT and IV Therapy are not included in any membership — available to members at a significant discount.
+      </div>
+
+      <button class="btn-primary" id="btn-plan" onclick="goToStep2()" disabled>
+        Continue with plan →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: INFO -->
+  <div class="section" id="step2">
+    <div class="section-header">
+      <div class="section-number">Step 2 of 3</div>
+      <div class="section-title">Your information</div>
+      <div class="section-sub">This creates your member account.</div>
+    </div>
+    <div class="section-body">
+      <button class="btn-back" onclick="goToStep1()">← Back</button>
+      <div class="field-row">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" id="firstName" placeholder="Jane" autocomplete="given-name" />
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Smith" autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="jane@email.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="phone" placeholder="(305) 555-0100" autocomplete="tel" />
+      </div>
+      <button class="btn-primary" onclick="goToStep3()">Continue to payment →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PAYMENT -->
+  <div class="section" id="step3">
+    <div class="section-header">
+      <div class="section-number">Step 3 of 3</div>
+      <div class="section-title">Payment</div>
+      <div class="section-sub">Your card is saved for monthly billing on the 1st.</div>
+    </div>
+    <div class="section-body">
+      <button class="btn-back" onclick="goToStep2()">← Back</button>
+
+      <!-- PAYMENT SUMMARY -->
+      <div class="pay-summary" id="paySummary">
+        <div class="pay-summary-title">What you'll pay today</div>
+        <div class="pay-row">
+          <span class="pay-row-label" id="prorateLine">April prorated (16 days)</span>
+          <span class="pay-row-amount" id="prorateAmt">$159</span>
+        </div>
+        <div class="pay-row">
+          <span class="pay-row-label" id="month2Line">May — full month</span>
+          <span class="pay-row-amount" id="month2Amt">$299</span>
+        </div>
+        <div class="pay-divider"></div>
+        <div class="pay-total-row">
+          <span class="pay-total-label">Due today</span>
+          <span class="pay-total-amount" id="totalAmt">$458</span>
+        </div>
+        <div class="pay-then" id="thenLine">Then $299/month starting June 1</div>
+      </div>
+
+      <!-- CARD INPUT -->
+      <div class="card-label">Card details</div>
+      <div id="card-element"></div>
+      <div id="card-errors"></div>
+
+      <button class="btn-primary" id="submitBtn" onclick="submitMembership()">
+        Activate membership
+      </button>
+
+      <div class="trust-row">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Secured by Stripe
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          Cancel anytime
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          No startup fee
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div id="confirmation">
+    <div class="confirm-card">
+      <div class="confirm-icon">🎉</div>
+      <div class="confirm-title">Welcome to Healthspan!</div>
+      <div class="confirm-sub">Your membership is active. We sent a magic link to your email — tap it to access your member portal and book your first session.</div>
+      <div class="confirm-detail" id="confirmDetails">
+        <div class="confirm-detail-row"><span>Plan</span><span id="confirmPlan">Regular Member</span></div>
+        <div class="confirm-detail-row"><span>Charged today</span><span id="confirmCharged">$458</span></div>
+        <div class="confirm-detail-row"><span>Next billing</span><span id="confirmNext">June 1, 2026</span></div>
+        <div class="confirm-detail-row"><span>Portal access</span><span>Check your email</span></div>
+      </div>
+      <a href="/portal" class="confirm-btn">Go to Member Portal →</a>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ── CONFIG ──
+  const SUPABASE_URL = 'https://teflbpdoijlswupkjbun.supabase.co';
+  const STRIPE_PK = document.querySelector('meta[name="stripe-pk"]')?.content
+    || 'pk_test_51T4p9lILBp9JUOcY'; // replaced via env at build
+
+  const stripe = Stripe(STRIPE_PK);
+  const elements = stripe.elements({ fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap' }] });
+
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: '15px',
+        color: '#0D1B2A',
+        '::placeholder': { color: '#C1C7D0' }
+      }
+    }
+  });
+  cardElement.mount('#card-element');
+  cardElement.on('change', e => {
+    document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+  });
+  cardElement.on('focus', () => document.getElementById('card-element').classList.add('focused'));
+  cardElement.on('blur',  () => document.getElementById('card-element').classList.remove('focused'));
+
+  // ── STATE ──
+  let selectedPlan = null;
+  const PLAN_PRICES = { regular: 299, vip: 499 };
+  const PLAN_LABELS = { regular: 'Regular Member', vip: 'VIP Member' };
+
+  // ── PLAN SELECTION ──
+  function selectPlan(plan) {
+    selectedPlan = plan;
+    document.getElementById('card-regular').classList.toggle('selected', plan === 'regular');
+    document.getElementById('card-vip').classList.toggle('selected', plan === 'vip');
+    document.getElementById('btn-plan').disabled = false;
+    updatePaySummary();
+  }
+
+  // ── PRORATE CALCULATION ──
+  function calcProrate(price) {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const remaining = daysInMonth - now.getDate() + 1; // include today
+    return Math.round((remaining / daysInMonth) * price);
+  }
+
+  function monthName(offset = 0) {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const d = new Date();
+    d.setMonth(d.getMonth() + offset);
+    return months[d.getMonth()];
+  }
+
+  function firstOfMonthAfterNext() {
+    const now = new Date();
+    // Month 2 is paid upfront, so subscription starts month 3
+    const start = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+    return start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function updatePaySummary() {
+    if (!selectedPlan) return;
+    const price = PLAN_PRICES[selectedPlan];
+    const prorate = calcProrate(price);
+    const total = prorate + price;
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const remaining = daysInMonth - now.getDate() + 1;
+
+    document.getElementById('prorateLine').textContent = `${monthName(0)} prorated (${remaining} days)`;
+    document.getElementById('prorateAmt').textContent = `$${prorate}`;
+    document.getElementById('month2Line').textContent = `${monthName(1)} — full month`;
+    document.getElementById('month2Amt').textContent = `$${price}`;
+    document.getElementById('totalAmt').textContent = `$${total}`;
+    document.getElementById('thenLine').textContent = `Then $${price}/month starting ${firstOfMonthAfterNext()}`;
+  }
+
+  // ── STEP NAVIGATION ──
+  function showStep(n) {
+    ['step1','step2','step3'].forEach((id, i) => {
+      document.getElementById(id).classList.toggle('active', i + 1 === n);
+    });
+    document.getElementById('progressBar').style.display = 'flex';
+    document.getElementById('confirmation').classList.remove('active');
+
+    // Progress dots
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById(`dot${i}`);
+      if (i < n) dot.className = 'step-dot done';
+      else if (i === n) dot.className = 'step-dot active';
+      else dot.className = 'step-dot inactive';
+    }
+    for (let i = 1; i <= 2; i++) {
+      document.getElementById(`line${i}`).classList.toggle('done', i < n);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goToStep1() { showStep(1); }
+  function goToStep2() { showStep(2); }
+  function goToStep3() {
+    const first = document.getElementById('firstName').value.trim();
+    const last  = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    if (!first || !last || !email || !phone) {
+      alert('Please fill in all fields.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    updatePaySummary();
+    showStep(3);
+  }
+
+  // ── SUBMIT ──
+  async function submitMembership() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Processing…';
+    document.getElementById('card-errors').textContent = '';
+
+    try {
+      // 1. Create PaymentMethod
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: {
+          name: `${document.getElementById('firstName').value.trim()} ${document.getElementById('lastName').value.trim()}`,
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim()
+        }
+      });
+
+      if (error) {
+        document.getElementById('card-errors').textContent = error.message;
+        btn.disabled = false;
+        btn.textContent = 'Activate membership';
+        return;
+      }
+
+      // 2. Get UTM params
+      const params = new URLSearchParams(window.location.search);
+      const utm = {
+        utm_source:   params.get('utm_source')   || null,
+        utm_medium:   params.get('utm_medium')   || null,
+        utm_campaign: params.get('utm_campaign') || null,
+        utm_content:  params.get('utm_content')  || null,
+        utm_term:     params.get('utm_term')      || null
+      };
+
+      // 3. Send to API
+      const res = await fetch('/api/create-membership', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName:        document.getElementById('firstName').value.trim(),
+          lastName:         document.getElementById('lastName').value.trim(),
+          email:            document.getElementById('email').value.trim(),
+          phone:            document.getElementById('phone').value.trim(),
+          planType:         selectedPlan,
+          paymentMethodId:  paymentMethod.id,
+          ...utm
+        })
+      });
+
+      const data = await res.json();
+
+      // 4. Handle 3D Secure if required
+      if (data.requiresAction && data.clientSecret) {
+        btn.innerHTML = '<span class="spinner"></span>Verifying card…';
+        const { error: confirmError } = await stripe.handleCardAction(data.clientSecret);
+        if (confirmError) {
+          document.getElementById('card-errors').textContent = confirmError.message;
+          btn.disabled = false;
+          btn.textContent = 'Activate membership';
+          return;
+        }
+        // Confirm again after 3DS
+        const res2 = await fetch('/api/create-membership', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName:        document.getElementById('firstName').value.trim(),
+            lastName:         document.getElementById('lastName').value.trim(),
+            email:            document.getElementById('email').value.trim(),
+            phone:            document.getElementById('phone').value.trim(),
+            planType:         selectedPlan,
+            paymentMethodId:  paymentMethod.id,
+            paymentIntentId:  data.paymentIntentId,
+            ...utm
+          })
+        });
+        const data2 = await res2.json();
+        if (!data2.success) throw new Error(data2.error || 'Payment failed');
+      } else if (!data.success) {
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+
+      // 5. Show confirmation
+      const price = PLAN_PRICES[selectedPlan];
+      const total = calcProrate(price) + price;
+      document.getElementById('confirmPlan').textContent = PLAN_LABELS[selectedPlan];
+      document.getElementById('confirmCharged').textContent = `$${total}`;
+      document.getElementById('confirmNext').textContent = firstOfMonthAfterNext();
+
+      document.getElementById('progressBar').style.display = 'none';
+      ['step1','step2','step3'].forEach(id => document.getElementById(id).classList.remove('active'));
+      document.getElementById('confirmation').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err) {
+      document.getElementById('card-errors').textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = 'Activate membership';
+    }
+  }
+
+  // Init
+  updatePaySummary();
+</script>
+</body>
+</html>

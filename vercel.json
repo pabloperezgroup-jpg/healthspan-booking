@@ -2,7 +2,9 @@
   "version": 2,
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/admin", "dest": "/admin.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/admin",   "dest": "/admin.html" },
+    { "src": "/join",    "dest": "/join.html" },
+    { "src": "/portal",  "dest": "/portal.html" },
+    { "src": "/(.*)",    "dest": "/index.html" }
   ]
 }

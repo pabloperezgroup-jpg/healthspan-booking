@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Portal · Healthspan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #0A7C6B; --teal-dark: #065C4F; --teal-light: #F0FAF8;
+      --navy: #0D1B2A; --gray: #6B7280; --gray-light: #F7F8F9;
+      --border: #E8EAED; --white: #FFFFFF;
+      --success: #10B981; --error: #EF4444; --warning: #F59E0B;
+      --frozen: #3B82F6; --frozen-light: #EFF6FF;
+      --cancel-light: #FFF7ED;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--gray-light); color: var(--navy);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--navy); padding: 18px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 20px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+    .logo span { color: #5EEAD4; }
+    .header-right { font-size: 13px; color: rgba(255,255,255,0.6); }
+    .header-right strong { color: white; }
+
+    /* CONTAINER */
+    .container { max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    /* LOGIN SCREEN */
+    #loginScreen { display: block; }
+    .login-card {
+      background: white; border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.07);
+      padding: 32px 24px; text-align: center;
+    }
+    .login-icon { font-size: 42px; margin-bottom: 12px; }
+    .login-title { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; letter-spacing: -0.4px; }
+    .login-sub { font-size: 14px; color: var(--gray); margin-bottom: 24px; line-height: 1.5; }
+    .login-input {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: inherit; font-size: 15px; color: var(--navy);
+      outline: none; transition: border-color 0.2s; margin-bottom: 12px;
+    }
+    .login-input:focus { border-color: var(--teal); }
+    .btn-primary {
+      width: 100%; padding: 15px;
+      background: var(--teal); color: white;
+      border: none; border-radius: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--teal-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-success {
+      display: none; background: var(--teal-light);
+      border-radius: 12px; padding: 16px;
+      font-size: 14px; color: var(--teal-dark); line-height: 1.5;
+      border: 1px solid rgba(10,124,107,0.2);
+    }
+    .login-new { margin-top: 20px; font-size: 13px; color: var(--gray); }
+    .login-new a { color: var(--teal); font-weight: 700; text-decoration: none; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; }
+
+    /* STATUS BANNER */
+    .status-banner {
+      border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .status-banner.active  { background: var(--teal-light); border: 1.5px solid rgba(10,124,107,0.2); }
+    .status-banner.frozen  { background: var(--frozen-light); border: 1.5px solid rgba(59,130,246,0.25); }
+    .status-banner.cancel  { background: var(--cancel-light); border: 1.5px solid rgba(245,158,11,0.25); }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .badge-active  { background: var(--teal);   color: white; }
+    .badge-frozen  { background: var(--frozen);  color: white; }
+    .badge-cancel  { background: var(--warning); color: white; }
+    .status-plan   { font-size: 17px; font-weight: 800; margin: 6px 0 2px; }
+    .status-detail { font-size: 13px; color: var(--gray); }
+
+    /* SESSION RING */
+    .session-ring {
+      width: 64px; height: 64px; flex-shrink: 0;
+      border-radius: 50%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .ring-count { font-size: 20px; font-weight: 800; color: var(--teal); line-height: 1; }
+    .ring-label { font-size: 9px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* CARDS */
+    .card {
+      background: white; border-radius: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06);
+      margin-bottom: 12px; overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-size: 14px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-body { padding: 16px 20px; }
+
+    /* BOOK BUTTON */
+    .btn-book {
+      display: block; width: 100%; padding: 18px;
+      background: var(--teal); color: white;
+      border: none; border-radius: 14px; margin-bottom: 12px;
+      font-family: inherit; font-size: 17px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+      text-decoration: none; letter-spacing: -0.3px;
+    }
+    .btn-book:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-book-sub { text-align: center; font-size: 12px; color: var(--gray); margin-bottom: 20px; }
+
+    /* DETAIL ROWS */
+    .detail-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .detail-label { color: var(--gray); }
+    .detail-value { font-weight: 700; color: var(--navy); }
+    .detail-value.teal { color: var(--teal); }
+
+    /* QR CODE */
+    .qr-area {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px;
+    }
+    .qr-placeholder {
+      width: 140px; height: 140px;
+      background: var(--gray-light); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--gray); margin-bottom: 10px;
+      border: 2px dashed var(--border);
+    }
+    #qrCanvas { border-radius: 8px; }
+    .qr-label { font-size: 12px; color: var(--gray); text-align: center; }
+
+    /* FREEZE SECTION */
+    .freeze-month-select {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 15px; color: var(--navy);
+      background: white; outline: none; margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .freeze-month-select:focus { border-color: var(--teal); }
+    .btn-freeze {
+      width: 100%; padding: 13px;
+      background: var(--frozen-light); color: var(--frozen);
+      border: 1.5px solid rgba(59,130,246,0.3); border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-bottom: 8px;
+    }
+    .btn-freeze:hover { background: var(--frozen); color: white; }
+    .btn-unfreeze {
+      width: 100%; padding: 13px;
+      background: var(--success); color: white;
+      border: none; border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-unfreeze:hover { background: #059669; }
+    .freeze-note { font-size: 12px; color: var(--gray); text-align: center; line-height: 1.5; }
+
+    /* CANCEL */
+    .btn-cancel-link {
+      background: none; border: none; color: var(--error);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; padding: 8px 0; display: block; text-align: center; width: 100%;
+      opacity: 0.7; transition: opacity 0.2s;
+    }
+    .btn-cancel-link:hover { opacity: 1; }
+
+    /* CANCEL CONFIRM MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 20px 20px 0 0;
+      padding: 28px 24px 40px; width: 100%; max-width: 520px;
+    }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .modal-body { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 20px; }
+    .modal-warning {
+      background: var(--cancel-light); border-radius: 10px;
+      padding: 12px 14px; font-size: 13px; color: #92400E;
+      margin-bottom: 20px; line-height: 1.5;
+      border-left: 3px solid var(--warning);
+    }
+    .modal-reason {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 14px; color: var(--navy);
+      outline: none; margin-bottom: 14px; resize: none;
+    }
+    .modal-reason:focus { border-color: var(--teal); }
+    .btn-confirm-cancel {
+      width: 100%; padding: 14px; background: var(--error); color: white;
+      border: none; border-radius: 10px;
+      font-family: inherit; font-size: 15px; font-weight: 800;
+      cursor: pointer; margin-bottom: 10px; transition: background 0.2s;
+    }
+    .btn-confirm-cancel:hover { background: #DC2626; }
+    .btn-keep {
+      width: 100%; padding: 13px; background: none;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      color: var(--navy); cursor: pointer; transition: border-color 0.2s;
+    }
+    .btn-keep:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* SPINNER */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .msg { font-size: 13px; margin-top: 8px; text-align: center; min-height: 18px; }
+    .msg.error { color: var(--error); }
+    .msg.success { color: var(--success); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">Health<span>span</span></div>
+  <div class="header-right" id="headerName"></div>
+</header>
+
+<div class="container">
+
+  <!-- ── LOGIN SCREEN ── -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-icon">🔑</div>
+      <div class="login-title">Member Portal</div>
+      <div class="login-sub">Enter your email and we'll send you a magic link. No password needed.</div>
+
+      <input type="email" class="login-input" id="loginEmail"
+        placeholder="your@email.com" autocomplete="email"
+        onkeydown="if(event.key==='Enter') sendMagicLink()" />
+
+      <button class="btn-primary" id="loginBtn" onclick="sendMagicLink()">
+        Send my portal link
+      </button>
+      <div class="msg" id="loginMsg"></div>
+
+      <div class="login-success" id="loginSuccess">
+        ✉️ Check your email — your portal link is on its way.<br/>
+        <span style="color:var(--gray);font-size:12px;">The link expires in 15 minutes.</span>
+      </div>
+
+      <div class="login-new">
+        Not a member yet? <a href="/join">Join Healthspan →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div id="dashboard">
+
+    <!-- STATUS BANNER -->
+    <div class="status-banner" id="statusBanner">
+      <div>
+        <div id="statusBadge"></div>
+        <div class="status-plan" id="statusPlan"></div>
+        <div class="status-detail" id="statusDetail"></div>
+      </div>
+      <div class="session-ring" id="sessionRing">
+        <div class="ring-count" id="sessionCount">—</div>
+        <div class="ring-label">Today</div>
+      </div>
+    </div>
+
+    <!-- BOOK BUTTON -->
+    <div id="bookSection">
+      <a href="/" class="btn-book">📅 Book Your Visit</a>
+      <div class="btn-book-sub" id="bookSub">Tap to schedule your session stack</div>
+    </div>
+
+    <!-- QR CHECK-IN -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">QR Check-In</div>
+      </div>
+      <div class="qr-area">
+        <canvas id="qrCanvas" width="140" height="140"></canvas>
+        <div class="qr-label" style="margin-top:10px;">Show this at your station to check in</div>
+      </div>
+    </div>
+
+    <!-- MEMBERSHIP DETAILS -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">My Membership</div></div>
+      <div class="card-body">
+        <div class="detail-row">
+          <span class="detail-label">Plan</span>
+          <span class="detail-value" id="detailPlan">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value" id="detailStatus">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Next billing</span>
+          <span class="detail-value teal" id="detailBilling">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Monthly amount</span>
+          <span class="detail-value" id="detailAmount">—</span>
+        </div>
+        <div class="detail-row" id="cancelRow" style="display:none">
+          <span class="detail-label">Access ends</span>
+          <span class="detail-value" style="color:var(--warning)" id="detailCancelEnd">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREEZE / UNFREEZE -->
+    <div class="card" id="freezeCard">
+      <div class="card-header"><div class="card-title" id="freezeCardTitle">Freeze Membership</div></div>
+      <div class="card-body" id="freezeBody"></div>
+    </div>
+
+    <!-- CANCEL -->
+    <div style="margin-top:4px;margin-bottom:32px;" id="cancelSection">
+      <button class="btn-cancel-link" onclick="openCancelModal()">Cancel membership</button>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /container -->
+
+<!-- CANCEL MODAL -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <div class="modal-title">Cancel your membership?</div>
+    <div class="modal-body">You'll keep full access through the end of your current billing period. No refund or proration applies.</div>
+    <div class="modal-warning" id="cancelWarningText"></div>
+    <textarea class="modal-reason" id="cancelReason" rows="2" placeholder="Optional: What can we do better? (helps us improve)"></textarea>
+    <button class="btn-confirm-cancel" id="confirmCancelBtn" onclick="confirmCancel()">Yes, cancel my membership</button>
+    <button class="btn-keep" onclick="closeCancelModal()">Keep my membership</button>
+    <div class="msg" id="cancelMsg"></div>
+  </div>
+</div>
+
+<!-- QR lib -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<script>
+  const APP_URL = window.location.origin;
+  let currentMember = null;
+
+  // ── INIT: check for token in URL ──
+  (async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      // Remove token from URL (clean, one-time use)
+      window.history.replaceState({}, '', '/portal');
+      await verifyToken(token);
+    }
+  })();
+
+  // ── SEND MAGIC LINK ──
+  async function sendMagicLink() {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('loginMsg').textContent = 'Please enter a valid email.';
+      document.getElementById('loginMsg').className = 'msg error';
+      return;
+    }
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Sending…';
+    document.getElementById('loginMsg').textContent = '';
+
+    await fetch('/api/send-magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    // Always show success (security)
+    btn.style.display = 'none';
+    document.getElementById('loginEmail').style.display = 'none';
+    document.getElementById('loginSuccess').style.display = 'block';
+  }
+
+  // ── VERIFY TOKEN ──
+  async function verifyToken(token) {
+    try {
+      const res  = await fetch('/api/verify-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('loginMsg').textContent = data.error || 'Link expired. Request a new one.';
+        document.getElementById('loginMsg').className = 'msg error';
+        return;
+      }
+      showDashboard(data.member);
+    } catch {
+      document.getElementById('loginMsg').textContent = 'Something went wrong. Please try again.';
+      document.getElementById('loginMsg').className = 'msg error';
+    }
+  }
+
+  // ── SHOW DASHBOARD ──
+  function showDashboard(member) {
+    currentMember = member;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display  = 'block';
+
+    // Header
+    document.getElementById('headerName').innerHTML = `<strong>${member.first_name}</strong>`;
+
+    // Plan labels
+    const PLAN_LABELS = { regular: 'Regular Member', vip: 'VIP Member', '30day': '30-Day Pass', '1week': '1-Week Pass' };
+    const SESSION_LIMITS = { regular: 3, vip: 5 };
+    const planLabel  = PLAN_LABELS[member.plan_type]  || member.plan_type;
+    const sessionMax = SESSION_LIMITS[member.plan_type] || '∞';
+
+    // Status banner
+    const banner = document.getElementById('statusBanner');
+    banner.className = 'status-banner';
+    if (member.status === 'frozen') banner.classList.add('frozen');
+    else if (member.cancel_effective_date) banner.classList.add('cancel');
+    else banner.classList.add('active');
+
+    const badgeMap = { active: 'badge-active', frozen: 'badge-frozen' };
+    const badgeClass = member.cancel_effective_date ? 'badge-cancel' : (badgeMap[member.status] || 'badge-active');
+    const badgeText  = member.cancel_effective_date ? 'Cancelling' : member.status.charAt(0).toUpperCase() + member.status.slice(1);
+    document.getElementById('statusBadge').innerHTML = `<span class="status-badge ${badgeClass}">${badgeText}</span>`;
+    document.getElementById('statusPlan').textContent = planLabel;
+
+    if (member.status === 'frozen') {
+      const freezeEnd = member.freeze_end ? new Date(member.freeze_end).toLocaleDateString('en-US',{month:'long',day:'numeric'}) : '';
+      document.getElementById('statusDetail').textContent = `Frozen through ${freezeEnd}`;
+    } else if (member.cancel_effective_date) {
+      const end = new Date(member.cancel_effective_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+      document.getElementById('statusDetail').textContent = `Active through ${end}`;
+    } else {
+      document.getElementById('statusDetail').textContent = 'Active — sessions reset at midnight';
+    }
+
+    // Session ring
+    const todaySessions = member.today_sessions || 0;
+    document.getElementById('sessionCount').textContent = `${todaySessions}/${sessionMax}`;
+
+    // Book section
+    if (member.status === 'frozen') {
+      document.getElementById('bookSection').style.display = 'none';
+    } else {
+      document.getElementById('bookSection').style.display = 'block';
+    }
+
+    // Details
+    document.getElementById('detailPlan').textContent = planLabel;
+    document.getElementById('detailStatus').textContent = badgeText;
+    const billing = member.next_billing_date
+      ? new Date(member.next_billing_date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+      : '—';
+    document.getElementById('detailBilling').textContent = billing;
+    document.getElementById('detailAmount').textContent = member.monthly_amount_cents
+      ? `$${(member.monthly_amount_cents / 100).toFixed(0)}/month`
+      : '—';
+
+    if (member.cancel_effective_date) {
+      document.getElementById('cancelRow').style.display = 'flex';
+      document.getElementById('detailCancelEnd').textContent = new Date(member.cancel_effective_date)
+        .toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+      document.getElementById('detailBilling').textContent = 'No further charges';
+    }
+
+    // QR Code — encodes member ID for station check-in
+    QRCode.toCanvas(document.getElementById('qrCanvas'),
+      `HEALTHSPAN:${member.id}`,
+      { width: 140, margin: 1, color: { dark: '#0D1B2A', light: '#FFFFFF' } }
+    );
+
+    // Freeze section
+    renderFreezeSection(member);
+
+    // Cancel section — hide if already cancelling
+    if (member.cancel_effective_date) {
+      document.getElementById('cancelSection').style.display = 'none';
+    }
+  }
+
+  // ── FREEZE SECTION ──
+  function renderFreezeSection(member) {
+    const body  = document.getElementById('freezeBody');
+    const title = document.getElementById('freezeCardTitle');
+
+    if (member.status === 'frozen') {
+      title.textContent = 'Membership Frozen';
+      const freezeEnd = member.freeze_end ? new Date(member.freeze_end + 'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
+      body.innerHTML = `
+        <p style="font-size:14px;color:var(--gray);margin-bottom:14px;line-height:1.5;">
+          Your membership is paused through <strong>${freezeEnd}</strong>. It resumes automatically, or unfreeze early below.
+        </p>
+        <button class="btn-unfreeze" onclick="unfreeze()">Unfreeze Now</button>
+        <div class="msg" id="freezeMsg"></div>
+      `;
+    } else if (member.cancel_effective_date) {
+      document.getElementById('freezeCard').style.display = 'none';
+    } else {
+      title.textContent = 'Freeze Membership';
+      // Build next 3 full calendar months as options
+      const options = getNextMonthOptions(3);
+      const optionHtml = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      body.innerHTML = `
+        <p style="font-size:14px;color:var(--gray);margin-bottom:12px;line-height:1.5;">Freeze for one full calendar month. No charge for that month.</p>
+        <select class="freeze-month-select" id="freezeMonthSelect">
+          <option value="">Select a month…</option>
+          ${optionHtml}
+        </select>
+        <button class="btn-freeze" onclick="freeze()">Freeze Selected Month</button>
+        <div class="msg" id="freezeMsg"></div>
+        <p class="freeze-note" style="margin-top:10px;">Traveling? No problem. Freeze any month up to 3 months in advance.</p>
+      `;
+    }
+  }
+
+  function getNextMonthOptions(count) {
+    const options = [];
+    const now = new Date();
+    for (let i = 1; i <= count; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const label = d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      options.push({ value, label });
+    }
+    return options;
+  }
+
+  // ── FREEZE ──
+  async function freeze() {
+    const month = document.getElementById('freezeMonthSelect')?.value;
+    if (!month) { setMsg('freezeMsg','Please select a month.','error'); return; }
+
+    const btn = document.querySelector('.btn-freeze');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Freezing…';
+
+    const res  = await fetch('/api/freeze-membership', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ memberId: currentMember.id, targetMonth: month })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentMember.status = 'frozen';
+      currentMember.freeze_start = data.freeze_start;
+      currentMember.freeze_end   = data.freeze_end;
+      setMsg('freezeMsg','Membership frozen! Confirmation email sent.','success');
+      setTimeout(() => showDashboard(currentMember), 1200);
+    } else {
+      setMsg('freezeMsg', data.error || 'Something went wrong.','error');
+      btn.disabled = false; btn.textContent = 'Freeze Selected Month';
+    }
+  }
+
+  // ── UNFREEZE ──
+  async function unfreeze() {
+    const btn = document.querySelector('.btn-unfreeze');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Unfreezing…';
+
+    const res  = await fetch('/api/unfreeze-membership', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ memberId: currentMember.id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentMember.status = 'active';
+      currentMember.freeze_start = null; currentMember.freeze_end = null;
+      setMsg('freezeMsg','Membership reactivated! Welcome back.','success');
+      setTimeout(() => showDashboard(currentMember), 1200);
+    } else {
+      setMsg('freezeMsg', data.error || 'Something went wrong.','error');
+      btn.disabled = false; btn.textContent = 'Unfreeze Now';
+    }
+  }
+
+  // ── CANCEL MODAL ──
+  function openCancelModal() {
+    const effectiveDate = currentMember.current_period_end || currentMember.next_billing_date;
+    const endLabel = effectiveDate
+      ? new Date(effectiveDate).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+      : 'end of billing period';
+    document.getElementById('cancelWarningText').innerHTML =
+      `<strong>Your access continues through ${endLabel}.</strong> After that, you'll lose access and no further charges will apply.`;
+    document.getElementById('cancelModal').classList.add('open');
+  }
+  function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('open');
+    document.getElementById('cancelMsg').textContent = '';
+    document.getElementById('confirmCancelBtn').disabled = false;
+    document.getElementById('confirmCancelBtn').textContent = 'Yes, cancel my membership';
+  }
+
+  async function confirmCancel() {
+    const btn = document.getElementById('confirmCancelBtn');
+    const reason = document.getElementById('cancelReason').value.trim();
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Cancelling…';
+
+    const res  = await fetch('/api/cancel-membership', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ memberId: currentMember.id, reason })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentMember.cancel_effective_date = data.cancel_effective_date;
+      setMsg('cancelMsg','Cancellation confirmed. Check your email.','success');
+      setTimeout(() => { closeCancelModal(); showDashboard(currentMember); }, 1500);
+    } else {
+      setMsg('cancelMsg', data.error || 'Something went wrong.','error');
+      btn.disabled = false; btn.textContent = 'Yes, cancel my membership';
+    }
+  }
+
+  function setMsg(id, text, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = `msg ${type}`;
+  }
+</script>
+</body>
+</html>

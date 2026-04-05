@@ -97,7 +97,8 @@ module.exports = async (req, res) => {
       currency: 'usd',
       customer: customerId,
       payment_method: paymentMethodId,
-      confirm: true,
+payment_method_types: ['card'],
+confirm: true,
       off_session: false,
       metadata: {
         type: 'membership_signup',

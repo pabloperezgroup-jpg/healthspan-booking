@@ -112,6 +112,12 @@ module.exports = async (req, res) => {
       });
     });
 
+    // If Mindbody returned no bookable slots, use fallback schedule
+    if (Object.keys(slotsByDate).length === 0) {
+      console.log('Mindbody returned 0 slots, using fallback schedule');
+      return fallbackAvailability(req, res, startDate, endDate);
+    }
+
     return res.status(200).json({
       source: 'mindbody',
       startDate: startDate,
@@ -177,9 +183,10 @@ async function fallbackAvailability(req, res, startDate, endDate) {
       var dateKey = current.toISOString().split('T')[0];
       var dayOfWeek = current.getDay();
 
-      if (dayOfWeek !== 0) {
+      {
         var base;
-        if (dayOfWeek === 6) base = SLOTS.weekend;
+        if (dayOfWeek === 0) base = SLOTS.weekend; // Sunday open
+        else if (dayOfWeek === 6) base = SLOTS.weekend;
         else if (dayOfWeek === 5) base = SLOTS.friday;
         else base = SLOTS.weekday;
 

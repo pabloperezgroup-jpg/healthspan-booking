@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Book Your First HBOT Session ÃÂ· Healthspan</title>
+  <title>Book Your First HBOT Session · Healthspan</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://js.stripe.com/v3/"></script>
@@ -37,7 +37,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ HEADER Ã¢ÂÂÃ¢ÂÂ */
+    /* ── HEADER ── */
     .header {
       background: var(--white);
       border-bottom: 1px solid var(--border);
@@ -65,7 +65,7 @@
       font-weight: 600;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ OFFER STRIP Ã¢ÂÂÃ¢ÂÂ */
+    /* ── OFFER STRIP ── */
     .offer-strip {
       background: var(--navy);
       color: white;
@@ -79,14 +79,14 @@
       color: #5EEAD4;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ MAIN CONTAINER Ã¢ÂÂÃ¢ÂÂ */
+    /* ── MAIN CONTAINER ── */
     .container {
       max-width: 600px;
       margin: 0 auto;
       padding: 28px 16px 120px;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ SECTION BLOCKS Ã¢ÂÂÃ¢ÂÂ */
+    /* ── SECTION BLOCKS ── */
     .section {
       background: var(--white);
       border-radius: 20px;
@@ -159,7 +159,7 @@
       padding: 20px 22px;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ CHAMBER SELECTION Ã¢ÂÂÃ¢ÂÂ */
+    /* ── CHAMBER SELECTION ── */
     .chamber-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -195,7 +195,7 @@
     }
     .chamber-card.selected .chamber-tap-hint { display: none; }
     .chamber-card.selected::after {
-      content: 'Ã¢ÂÂ';
+      content: '✓';
       position: absolute;
       top: 12px;
       right: 14px;
@@ -246,7 +246,7 @@
       color: var(--success);
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ CALENDAR Ã¢ÂÂÃ¢ÂÂ */
+    /* ── CALENDAR ── */
     .month-nav {
       display: flex;
       align-items: center;
@@ -341,7 +341,7 @@
     .cal-day.past { opacity: 0.3; }
     .cal-day.no-slots { opacity: 0.3; }
 
-    /* Ã¢ÂÂÃ¢ÂÂ TIME SLOTS Ã¢ÂÂÃ¢ÂÂ */
+    /* ── TIME SLOTS ── */
     .time-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -381,7 +381,7 @@
       box-shadow: none;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ FORM FIELDS Ã¢ÂÂÃ¢ÂÂ */
+    /* ── FORM FIELDS ── */
     .field-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -414,7 +414,7 @@
     .field-input.error { border-color: var(--error); }
     .field-input::placeholder { color: #C4C9D0; }
 
-    /* Ã¢ÂÂÃ¢ÂÂ ORDER SUMMARY Ã¢ÂÂÃ¢ÂÂ */
+    /* ── ORDER SUMMARY ── */
     .summary-box {
       background: var(--teal-light);
       border-radius: var(--radius-sm);
@@ -442,7 +442,7 @@
     .summary-value { font-weight: 700; }
     .summary-discount { color: var(--success); font-weight: 700; }
 
-    /* Ã¢ÂÂÃ¢ÂÂ STRIPE Ã¢ÂÂÃ¢ÂÂ */
+    /* ── STRIPE ── */
     #stripe-payment-element {
       min-height: 100px;
     }
@@ -465,7 +465,7 @@
       display: none;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ STICKY BOOK BUTTON Ã¢ÂÂÃ¢ÂÂ */
+    /* ── STICKY BOOK BUTTON ── */
     .book-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -501,7 +501,7 @@
       transform: none;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ CONFIRMATION Ã¢ÂÂÃ¢ÂÂ */
+    /* ── CONFIRMATION ── */
     .confirmation { display: none; }
     .confirmation.visible { display: block; }
     .confirm-hero {
@@ -673,7 +673,7 @@
       flex-shrink: 0;
     }
 
-    /* Ã¢ÂÂÃ¢ÂÂ MOBILE Ã¢ÂÂÃ¢ÂÂ */
+    /* ── MOBILE ── */
     @media (max-width: 420px) {
       .chamber-grid { grid-template-columns: 1fr; }
       .time-grid { grid-template-columns: repeat(3, 1fr); }
@@ -698,7 +698,7 @@
       Claim Your $100 Off Your First<br>Hyperbaric Session
     </div>
     <div style="font-size:14px; color:var(--gray); margin-top:8px;">
-      Book in minutes ÃÂ· No account needed ÃÂ· Brickell, Miami
+      Book in minutes · No account needed · Brickell, Miami
     </div>
   </div>
 
@@ -713,13 +713,13 @@
 
         <div class="chamber-card" id="card-soft" onclick="selectChamber('soft')">
           <div class="chamber-name">Soft Chamber</div>
-          <div class="chamber-desc">1.3Ã¢ÂÂ1.5 ATA. Ideal for recovery, sleep, and immune support.</div>
+          <div class="chamber-desc">1.3–1.5 ATA. Ideal for recovery, sleep, and immune support.</div>
           <div class="chamber-price">
             <div class="price-new">$49</div>
             <div class="price-old">$149</div>
             <div class="price-save">Save $100</div>
           </div>
-          <div class="chamber-tap-hint">Tap to select Ã¢ÂÂ</div>
+          <div class="chamber-tap-hint">Tap to select →</div>
         </div>
 
         <div class="chamber-card" id="card-hard" onclick="selectChamber('hard')">
@@ -730,7 +730,7 @@
             <div class="price-old">$199</div>
             <div class="price-save">Save $100</div>
           </div>
-          <div class="chamber-tap-hint">Tap to select Ã¢ÂÂ</div>
+          <div class="chamber-tap-hint">Tap to select →</div>
         </div>
 
       </div>
@@ -746,9 +746,9 @@
     </div>
     <div class="section-body">
       <div class="month-nav">
-        <button class="month-btn" onclick="prevMonth()">Ã¢ÂÂ¹</button>
+        <button class="month-btn" onclick="prevMonth()">‹</button>
         <div class="month-label" id="month-label"></div>
-        <button class="month-btn" onclick="nextMonth()">Ã¢ÂÂº</button>
+        <button class="month-btn" onclick="nextMonth()">›</button>
       </div>
       <div class="day-headers">
         <div class="day-hdr">Su</div><div class="day-hdr">Mo</div>
@@ -815,11 +815,11 @@
     <div class="section-body">
       <div class="summary-box" id="order-summary">
         <div class="summary-row">
-          <span class="summary-label" id="sum-service">HBOT Session ÃÂ· 60 min</span>
+          <span class="summary-label" id="sum-service">HBOT Session · 60 min</span>
           <span class="summary-value" id="sum-original"></span>
         </div>
         <div class="summary-row">
-          <span class="summary-label" id="sum-datetime">Ã¢ÂÂ</span>
+          <span class="summary-label" id="sum-datetime">—</span>
         </div>
         <div class="summary-row">
           <span class="summary-discount">First Visit Discount</span>
@@ -838,7 +838,7 @@
       </div>
       <div id="payment-message"></div>
       <div class="stripe-secure">
-        Ã°ÂÂÂ Payments secured by Stripe ÃÂ· Healthspan never stores your card
+        🔒 Payments secured by Stripe · Healthspan never stores your card
       </div>
     </div>
   </div>
@@ -849,7 +849,7 @@
 <div class="container confirmation" id="confirmation">
 
   <div class="confirm-hero">
-    <div class="confirm-check">Ã¢ÂÂ</div>
+    <div class="confirm-check">✓</div>
     <div class="confirm-title">You're booked!</div>
     <div class="confirm-sub">
       We're so excited to see you for your first session.<br>
@@ -880,7 +880,7 @@
     <div class="confirm-detail-row">
       <div>
         <div class="confirm-detail-label">What to Bring</div>
-        <div class="confirm-detail-value">Comfortable, loose clothing. Arrive 5Ã¢ÂÂ10 minutes early. No metal jewelry inside the chamber.</div>
+        <div class="confirm-detail-value">Comfortable, loose clothing. Arrive 5–10 minutes early. No metal jewelry inside the chamber.</div>
       </div>
     </div>
   </div>
@@ -888,33 +888,33 @@
   <div class="membership-card">
     <div class="membership-card-title">Loved it? Become a Member.</div>
     <div class="membership-card-sub">
-      Members pay just $49 per HBOT session every time Ã¢ÂÂ the same price you paid today Ã¢ÂÂ plus unlimited access to our full wellness studio.
+      Members pay just $49 per HBOT session every time — the same price you paid today — plus unlimited access to our full wellness studio.
     </div>
     <div class="membership-benefits">
       <div class="benefit-row">
-        <div class="benefit-check">Ã¢ÂÂ</div>
+        <div class="benefit-check">✓</div>
         Unlimited daily sessions (Red Light, PEMF, Sauna, Cold Plunge + more)
       </div>
       <div class="benefit-row">
-        <div class="benefit-check">Ã¢ÂÂ</div>
+        <div class="benefit-check">✓</div>
         HBOT at member pricing every session
       </div>
       <div class="benefit-row">
-        <div class="benefit-check">Ã¢ÂÂ</div>
-        Month-to-month ÃÂ· No contracts ÃÂ· Cancel anytime
+        <div class="benefit-check">✓</div>
+        Month-to-month · No contracts · Cancel anytime
       </div>
     </div>
     <button class="btn-membership" onclick="window.open('https://www.healthspanrecovery.com/membership','_blank')">
-      Learn About Membership Ã¢ÂÂ
+      Learn About Membership →
     </button>
   </div>
 
   <a class="hbot-link-card" href="https://www.healthspanrecovery.com/faqs" target="_blank">
     <div>
       <div class="hbot-link-text">Have questions about your session?</div>
-      <div class="hbot-link-sub">Read our HBOT FAQs Ã¢ÂÂ safety, what to wear, what to expect Ã¢ÂÂ</div>
+      <div class="hbot-link-sub">Read our HBOT FAQs — safety, what to wear, what to expect →</div>
     </div>
-    <div class="hbot-link-arrow">Ã¢ÂÂ</div>
+    <div class="hbot-link-arrow">→</div>
   </a>
 
 </div>
@@ -927,16 +927,16 @@
 </div>
 
 <script>
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // STRIPE
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 const stripe = Stripe('pk_test_51T4p9lILBp9JUOcYUIUjrxMU0HYTanW2M7XmNWNzMELjWcjfmvQa7fdraHYe5BgXxk5ejyfCdNx7loA6X81aD5dO00AvHjwFoA');
 let stripeElements = null;
 let stripeInitialized = false;
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // SUPABASE
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 const SUPABASE_URL = 'https://teflbpdoijlswupkjbun.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZmxicGRvaWpsc3d1cGtqYnVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTgzNTcsImV4cCI6MjA5MDczNDM1N30.zBsAi4uY40RWpZRcKtLrEU0L8f1l9sM1UpJVdymDSJc';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -953,23 +953,33 @@ async function loadAvailability() {
     const today = new Date();
     const future = new Date(today);
     future.setDate(today.getDate() + 90);
+
     const startDate = dateStr(today);
     const endDate = dateStr(future);
+
     const chamberParam = state.chamber ? `&chamber=${state.chamber}` : '';
     const response = await fetch(`/api/get-availability?startDate=${startDate}&endDate=${endDate}${chamberParam}`);
     const data = await response.json();
+
     if (data.availability) {
       availabilityCache = {};
       bookedCache = {};
+
       Object.keys(data.availability).forEach(dateKey => {
         const slots = data.availability[dateKey];
         availabilityCache[dateKey] = {};
         bookedCache[dateKey] = [];
+
         slots.forEach(slot => {
-          if (slot.booked) { bookedCache[dateKey].push(slot.time); }
-          else { availabilityCache[dateKey][slot.time] = true; }
+          if (slot.booked) {
+            bookedCache[dateKey].push(slot.time);
+          } else {
+            availabilityCache[dateKey][slot.time] = true;
+          }
         });
       });
+
+      // Store availability from any source (mindbody or fallback)
       window._mindbodySlots = data.availability;
     }
   } catch(e) {
@@ -1004,9 +1014,9 @@ async function saveBooking(booking) {
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // STATE
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 const state = {
   chamber: null,
   date: null,
@@ -1023,9 +1033,9 @@ const state = {
   });
 })();
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-// TIME SLOT DEFINITIONS Ã¢ÂÂ 7 per day type
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
+// TIME SLOT DEFINITIONS — 7 per day type
+// ════════════════════════════════════════════
 const SLOTS = {
   weekday: ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','5:00 PM','7:00 PM'],
   friday:  ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','4:00 PM','5:00 PM'],
@@ -1035,15 +1045,24 @@ const SLOTS = {
 function getSlotsForDate(date) {
   const day = date.getDay();
   const ds = dateStr(date);
-    if (window._mindbodySlots && window._mindbodySlots[ds]) {
-    return window._mindbodySlots[ds].map(slot => ({ time: slot.time, booked: slot.booked || false }));
+
+  // If we have real-time data (Mindbody or fallback), use it directly
+  if (window._mindbodySlots && window._mindbodySlots[ds]) {
+    return window._mindbodySlots[ds].map(slot => ({
+      time: slot.time,
+      booked: slot.booked || false
+    }));
   }
+
+  // Fallback: hardcoded schedule + Supabase overrides
   const overrides = availabilityCache[ds] || {};
   const booked = bookedCache[ds] || [];
+
   let base;
   if (day === 0 || day === 6) base = SLOTS.weekend;
   else if (day === 5) base = SLOTS.friday;
   else base = SLOTS.weekday;
+
   return base.map(time => {
     const isBooked = booked.includes(time);
     const override = overrides[time];
@@ -1058,9 +1077,9 @@ function hasAvailability(date) {
   return getSlotsForDate(date).some(s => !s.booked);
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // CHAMBER SELECTION
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 function selectChamber(type) {
   state.chamber = type;
   state.date = null;
@@ -1072,14 +1091,15 @@ function selectChamber(type) {
   document.getElementById('card-hard').classList.toggle('selected', type === 'hard');
 
   unlock('sec-date');
-  loadAvailability().then(() => renderCalendar());
+  renderCalendar();
   updateBookBtn();
   scrollTo('sec-date');
+  loadAvailability().then(() => renderCalendar());
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // CALENDAR
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function renderCalendar() {
@@ -1143,9 +1163,9 @@ function selectDate(date) {
   scrollTo('sec-time');
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // TIME SLOTS
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -1175,27 +1195,27 @@ function selectTime(time) {
   scrollTo('sec-info');
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // ORDER SUMMARY
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 function updateSummary() {
   const isSoft = state.chamber === 'soft';
   document.getElementById('sum-service').textContent =
-    isSoft ? 'HBOT Soft Chamber ÃÂ· 60 min' : 'HBOT Hard Chamber ÃÂ· 60 min';
+    isSoft ? 'HBOT Soft Chamber · 60 min' : 'HBOT Hard Chamber · 60 min';
   document.getElementById('sum-original').textContent = isSoft ? '$149' : '$199';
-  document.getElementById('sum-discount').textContent = 'Ã¢ÂÂ$100';
+  document.getElementById('sum-discount').textContent = '−$100';
   document.getElementById('sum-total').textContent = isSoft ? '$49' : '$99';
 
   if (state.date && state.time) {
     const d = state.date;
     document.getElementById('sum-datetime').textContent =
-      `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()} ÃÂ· ${state.time}`;
+      `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()} · ${state.time}`;
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // BOOK BUTTON
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 function updateBookBtn() {
   const btn = document.getElementById('book-btn');
   if (!state.chamber) {
@@ -1209,7 +1229,7 @@ function updateBookBtn() {
     btn.disabled = true;
   } else {
     const price = state.chamber === 'soft' ? '$49' : '$99';
-    btn.textContent = `Book My Session ÃÂ· ${price}`;
+    btn.textContent = `Book My Session · ${price}`;
     btn.disabled = false;
   }
 }
@@ -1219,9 +1239,9 @@ async function handleBookBtn() {
   await completeBooking();
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // STRIPE
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 async function initStripePayment() {
   stripeInitialized = true;
   try {
@@ -1255,9 +1275,9 @@ async function initStripePayment() {
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // COMPLETE BOOKING
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 function validateInfo() {
   let ok = true;
   ['fname','lname','email','phone'].forEach(id => {
@@ -1279,27 +1299,35 @@ async function completeBooking() {
   const btn = document.getElementById('book-btn');
   btn.textContent = 'Processing...';
   btn.disabled = true;
+
   const msgEl = document.getElementById('payment-message');
   msgEl.style.display = 'none';
+
   if (!stripeElements) {
     msgEl.textContent = 'Payment form is loading. Please wait a moment and try again.';
     msgEl.style.display = 'block';
-    btn.textContent = `Book My Session ÃÂ· ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
+
   const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
     elements: stripeElements,
-    confirmParams: { return_url: window.location.origin, receipt_email: document.getElementById('email').value.trim() },
+    confirmParams: {
+      return_url: window.location.origin,
+      receipt_email: document.getElementById('email').value.trim()
+    },
     redirect: 'if_required'
   });
+
   if (stripeError) {
     msgEl.textContent = stripeError.message;
     msgEl.style.display = 'block';
-    btn.textContent = `Book My Session ÃÂ· ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
+
   const booking = {
     firstName: document.getElementById('fname').value.trim(),
     lastName:  document.getElementById('lname').value.trim(),
@@ -1310,12 +1338,13 @@ async function completeBooking() {
     time:      state.time,
     amount:    state.chamber === 'soft' ? 49 : 99,
     paymentIntentId: paymentIntent ? paymentIntent.id : null,
-    utm_source: state.utm.utm_source || null,
-    utm_medium: state.utm.utm_medium || null,
+    utm_source:   state.utm.utm_source || null,
+    utm_medium:   state.utm.utm_medium || null,
     utm_campaign: state.utm.utm_campaign || null,
-    utm_content: state.utm.utm_content || null,
-    utm_term: state.utm.utm_term || null
+    utm_content:  state.utm.utm_content || null,
+    utm_term:     state.utm.utm_term || null
   };
+
   try {
     const res = await fetch('/api/book-session', {
       method: 'POST',
@@ -1323,20 +1352,23 @@ async function completeBooking() {
       body: JSON.stringify(booking)
     });
     const result = await res.json();
+
     if (result.error === 'slot_taken') {
       msgEl.textContent = result.message || 'That time was just booked. Please pick another.';
       msgEl.style.display = 'block';
-      btn.textContent = `Book My Session ÃÂ· ${state.chamber === 'soft' ? '$49' : '$99'}`;
+      btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
       btn.disabled = false;
       await loadAvailability();
       renderCalendar();
       renderTimeSlots();
       return;
     }
+
     if (!res.ok) throw new Error(result.error || 'Booking failed');
   } catch(e) {
     console.error('Server booking error (payment succeeded):', e.message);
   }
+
   showConfirmation({ ...booking, date: state.date });
 }
 
@@ -1348,7 +1380,7 @@ function showConfirmation(booking) {
 
   document.getElementById('confirm-email').textContent = booking.email;
   document.getElementById('confirm-service').textContent =
-    booking.chamber === 'soft' ? 'Soft Hyperbaric Chamber ÃÂ· 60 min' : 'Hard Hyperbaric Chamber ÃÂ· 60 min';
+    booking.chamber === 'soft' ? 'Soft Hyperbaric Chamber · 60 min' : 'Hard Hyperbaric Chamber · 60 min';
 
   const d = booking.date;
   document.getElementById('confirm-datetime').textContent =
@@ -1357,18 +1389,18 @@ function showConfirmation(booking) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 // HELPERS
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ════════════════════════════════════════════
 function unlock(id) {
   document.getElementById(id).classList.remove('locked');
 }
 
 const NUDGE_MSGS = {
-  'sec-date':    'Ã¢ÂÂ Choose your chamber first',
-  'sec-time':    'Ã¢ÂÂ Pick a date first',
-  'sec-info':    'Ã¢ÂÂ Select a time first',
-  'sec-payment': 'Ã¢ÂÂ Fill in your info first'
+  'sec-date':    '← Choose your chamber first',
+  'sec-time':    '← Pick a date first',
+  'sec-info':    '← Select a time first',
+  'sec-payment': '← Fill in your info first'
 };
 function nudgeLocked(secId) {
   const sec = document.getElementById(secId);

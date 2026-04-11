@@ -1,11 +1,12 @@
-// Temporary diagnostic endpoint — pulls session types, staff, and bookable items from Mindbody
-// DELETE THIS FILE after we find the right IDs
+// Temporary diagnostic endpoint — v2
+// Shows raw response from Mindbody appointments endpoint
+// DELETE THIS FILE after debugging is complete
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  var results = { env: {}, token: null, sessionTypes: null, staff: null, bookableItems: null, appointments: null };
+  var results = { env: {}, token: null, staff: null, appointmentsRaw: null };
 
   // Check which env vars are set (don't reveal values)
   results.env = {
@@ -13,8 +14,6 @@ module.exports = async (req, res) => {
     MINDBODY_SITE_ID: !!process.env.MINDBODY_SITE_ID,
     MINDBODY_STAFF_USERNAME: !!process.env.MINDBODY_STAFF_USERNAME,
     MINDBODY_STAFF_PASSWORD: !!process.env.MINDBODY_STAFF_PASSWORD,
-    MINDBODY_HBOT_SOFT_SESSION_TYPE_ID: process.env.MINDBODY_HBOT_SOFT_SESSION_TYPE_ID || 'NOT SET',
-    MINDBODY_HBOT_HARD_SESSION_TYPE_ID: process.env.MINDBODY_HBOT_HARD_SESSION_TYPE_ID || 'NOT SET',
     SITE_ID_VALUE: process.env.MINDBODY_SITE_ID || 'NOT SET'
   };
 
@@ -50,103 +49,97 @@ module.exports = async (req, res) => {
       'Authorization': tokenData.AccessToken
     };
 
-    // Step 2: Get all session types
+    // Step 2: Quick staff check (this works)
     try {
-      var stRes = await fetch('https://api.mindbodyonline.com/public/v6/appointment/sessiontypes', {
-        headers: headers
-      });
-      var stData = await stRes.json();
-      results.sessionTypes = {
-        ok: stRes.ok,
-        count: (stData.SessionTypes || []).length,
-        types: (stData.SessionTypes || []).map(function(t) {
-          return { Id: t.Id, Name: t.Name, NumDeducted: t.NumDeducted, ProgramId: t.ProgramId };
-        })
-      };
-    } catch(e) {
-      results.sessionTypes = { error: e.message };
-    }
-
-    // Step 3: Get all staff (these are your chambers)
-    try {
-      var staffRes = await fetch('https://api.mindbodyonline.com/public/v6/staff/staff?Limit=100', {
+      var staffRes = await fetch('https://api.mindbodyonline.com/public/v6/staff/staff?Limit=5', {
         headers: headers
       });
       var staffData = await staffRes.json();
       results.staff = {
         ok: staffRes.ok,
-        count: (staffData.StaffMembers || []).length,
-        members: (staffData.StaffMembers || []).map(function(s) {
-          return { Id: s.Id, DisplayName: s.DisplayName, FirstName: s.FirstName, LastName: s.LastName, isMale: s.isMale };
-        })
+        status: staffRes.status,
+        count: (staffData.StaffMembers || []).length
       };
     } catch(e) {
       results.staff = { error: e.message };
     }
 
-    // Step 4: Try bookable items for tomorrow
+    // Step 3: Appointments — capture RAW response text + status
     try {
       var tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      var startDate = tomorrow.toISOString().split('T')[0];
-      var endDate = startDate;
+      var apptDate = tomorrow.toISOString().split('T')[0];
 
-      var biRes = await fetch(
-        'https://api.mindbodyonline.com/public/v6/appointment/bookableitems?StartDate=' + startDate + '&EndDate=' + endDate + '&Limit=200',
-        { headers: headers }
-      );
-      var biData = await biRes.json();
-      var items = biData.BookableItems || biData.AvailableItems || [];
-      results.bookableItems = {
-        ok: biRes.ok,
-        status: biRes.status,
-        count: items.length,
-        rawKeys: Object.keys(biData),
-        first3: items.slice(0, 3).map(function(item) {
-          return {
-            Id: item.Id,
-            StartDateTime: item.StartDateTime,
-            EndDateTime: item.EndDateTime,
-            Staff: item.Staff ? { Id: item.Staff.Id, Name: item.Staff.DisplayName } : null,
-            SessionType: item.SessionType ? { Id: item.SessionType.Id, Name: item.SessionType.Name } : null,
-            Location: item.Location ? { Id: item.Location.Id, Name: item.Location.Name } : null
-          };
-        }),
-        errorMessage: biData.Error || null
+      // Try WITHOUT StaffIds first (simplest call)
+      var url1 = 'https://api.mindbodyonline.com/public/v6/appointment/appointments?StartDate=' + apptDate + '&EndDate=' + apptDate;
+      var apptRes1 = await fetch(url1, { headers: headers });
+      var rawText1 = await apptRes1.text();
+
+      results.appointmentsRaw = {
+        url: url1,
+        httpStatus: apptRes1.status,
+        httpStatusText: apptRes1.statusText,
+        contentType: apptRes1.headers.get('content-type'),
+        rawFirst500: rawText1.substring(0, 500),
+        isJSON: rawText1.trim().startsWith('{') || rawText1.trim().startsWith('[')
       };
-    } catch(e) {
-      results.bookableItems = { error: e.message };
-    }
 
-    // Step 5: Try scheduled appointments (already booked)
-    try {
-      var tomorrow2 = new Date();
-      tomorrow2.setDate(tomorrow2.getDate() + 1);
-      var apptDate = tomorrow2.toISOString().split('T')[0];
-
-      var apptRes = await fetch(
-        'https://api.mindbodyonline.com/public/v6/appointment/appointments?StartDate=' + apptDate + '&EndDate=' + apptDate,
-        { headers: headers }
-      );
-      var apptData = await apptRes.json();
-      var appts = apptData.Appointments || [];
-      results.appointments = {
-        ok: apptRes.ok,
-        count: appts.length,
-        first3: appts.slice(0, 3).map(function(a) {
-          return {
-            Id: a.Id,
-            StartDateTime: a.StartDateTime,
-            EndDateTime: a.EndDateTime,
-            Status: a.Status,
-            Staff: a.Staff ? { Id: a.Staff.Id, Name: a.Staff.DisplayName } : null,
-            SessionType: a.SessionType ? { Id: a.SessionType.Id, Name: a.SessionType.Name } : null,
-            Client: a.Client ? { Id: a.Client.Id, FirstName: a.Client.FirstName } : null
+      // If that worked as JSON, parse it
+      if (results.appointmentsRaw.isJSON) {
+        try {
+          var parsed = JSON.parse(rawText1);
+          results.appointmentsRaw.parsed = {
+            appointmentCount: (parsed.Appointments || []).length,
+            first2: (parsed.Appointments || []).slice(0, 2).map(function(a) {
+              return {
+                Id: a.Id,
+                StartDateTime: a.StartDateTime,
+                Status: a.Status,
+                Staff: a.Staff ? { Id: a.Staff.Id, Name: a.Staff.DisplayName } : null
+              };
+            }),
+            errorMessage: parsed.Error || null
           };
-        })
+        } catch(pe) {
+          results.appointmentsRaw.parseError = pe.message;
+        }
+      }
+
+      // Step 4: Also try WITH StaffIds for soft chamber
+      var url2 = 'https://api.mindbodyonline.com/public/v6/appointment/appointments?StartDate=' + apptDate + '&EndDate=' + apptDate + '&StaffIds=100000015';
+      var apptRes2 = await fetch(url2, { headers: headers });
+      var rawText2 = await apptRes2.text();
+
+      results.appointmentsWithStaff = {
+        url: url2,
+        httpStatus: apptRes2.status,
+        httpStatusText: apptRes2.statusText,
+        rawFirst500: rawText2.substring(0, 500),
+        isJSON: rawText2.trim().startsWith('{') || rawText2.trim().startsWith('[')
       };
+
+      if (results.appointmentsWithStaff.isJSON) {
+        try {
+          var parsed2 = JSON.parse(rawText2);
+          results.appointmentsWithStaff.parsed = {
+            appointmentCount: (parsed2.Appointments || []).length,
+            first2: (parsed2.Appointments || []).slice(0, 2).map(function(a) {
+              return {
+                Id: a.Id,
+                StartDateTime: a.StartDateTime,
+                Status: a.Status,
+                Staff: a.Staff ? { Id: a.Staff.Id, Name: a.Staff.DisplayName } : null
+              };
+            }),
+            errorMessage: parsed2.Error || null
+          };
+        } catch(pe2) {
+          results.appointmentsWithStaff.parseError = pe2.message;
+        }
+      }
+
     } catch(e) {
-      results.appointments = { error: e.message };
+      results.appointmentsRaw = { fatalError: e.message };
     }
 
   } catch(err) {

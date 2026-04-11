@@ -81,11 +81,10 @@ module.exports = async (req, res) => {
     }
 
     // ── Step 3: Query existing appointments from Mindbody ──
-    // Fetch appointments for each staff/chamber
-    var bookedSlots = {}; // { "2026-04-12": ["9:00 AM", "1:00 PM"], ... }
+    // Store appointment time ranges so we can check overlaps (not just exact matches)
+    // { "2026-04-12": [ { start: minutesSinceMidnight, end: minutesSinceMidnight }, ... ] }
+    var bookedRanges = {};
 
-    // Mindbody limits date ranges, so query in chunks if needed
-    // For now, query all at once (works for reasonable ranges)
     for (var i = 0; i < staffIds.length; i++) {
       var staffId = staffIds[i];
       var offset = 0;
@@ -125,16 +124,18 @@ module.exports = async (req, res) => {
         appointments.forEach(function(appt) {
           // Only count confirmed/completed appointments, not cancelled
           if (appt.Status === 'Cancelled' || appt.Status === 'NoShow') return;
-          if (!appt.StartDateTime) return;
+          if (!appt.StartDateTime || !appt.EndDateTime) return;
 
-          var dt = new Date(appt.StartDateTime);
-          var dateKey = dt.toISOString().split('T')[0];
-          var timeStr = formatTime(dt);
+          var startDt = new Date(appt.StartDateTime);
+          var endDt = new Date(appt.EndDateTime);
+          var dateKey = startDt.toISOString().split('T')[0];
 
-          if (!bookedSlots[dateKey]) bookedSlots[dateKey] = [];
-          if (!bookedSlots[dateKey].includes(timeStr)) {
-            bookedSlots[dateKey].push(timeStr);
-          }
+          // Store as minutes since midnight for easy overlap math
+          var startMin = startDt.getHours() * 60 + startDt.getMinutes();
+          var endMin = endDt.getHours() * 60 + endDt.getMinutes();
+
+          if (!bookedRanges[dateKey]) bookedRanges[dateKey] = [];
+          bookedRanges[dateKey].push({ start: startMin, end: endMin });
         });
 
         // Check if there are more pages
@@ -144,8 +145,12 @@ module.exports = async (req, res) => {
       }
     }
 
-    // ── Step 4: Build availability by merging schedule with booked slots ──
+    // ── Step 4: Build availability by checking time range overlaps ──
+    // A slot is "booked" if ANY appointment overlaps with its 60-minute window.
+    // Example: slot at 11:00 AM = [660, 720]. If an appointment runs [690, 750]
+    // (11:30-12:30), it overlaps → slot is blocked.
     var availability = {};
+    var totalBlocked = 0;
     var current = new Date(startDate + 'T00:00:00');
     var end = new Date(endDate + 'T00:00:00');
 
@@ -159,27 +164,36 @@ module.exports = async (req, res) => {
       else if (dayOfWeek === 5) base = SLOTS.friday;
       else base = SLOTS.weekday;
 
-      var dateBooked = bookedSlots[dateKey] || [];
+      var dateRanges = bookedRanges[dateKey] || [];
 
       availability[dateKey] = base.map(function(time) {
-        return {
-          time: time,
-          booked: dateBooked.includes(time)
-        };
+        // Convert slot time string to minutes since midnight
+        var slotStart = timeStringToMinutes(time);
+        var slotEnd = slotStart + 60; // 60-minute session window
+
+        // Check if ANY appointment overlaps with this slot's window
+        var isBlocked = dateRanges.some(function(range) {
+          // Overlap exists if: appt starts before slot ends AND appt ends after slot starts
+          return range.start < slotEnd && range.end > slotStart;
+        });
+
+        if (isBlocked) totalBlocked++;
+        return { time: time, booked: isBlocked };
       });
 
       current.setDate(current.getDate() + 1);
     }
 
-    var bookedCount = Object.values(bookedSlots).reduce(function(sum, arr) { return sum + arr.length; }, 0);
-    console.log('Mindbody: found ' + bookedCount + ' booked slots across ' + Object.keys(bookedSlots).length + ' dates');
+    var totalAppts = Object.values(bookedRanges).reduce(function(sum, arr) { return sum + arr.length; }, 0);
+    console.log('Mindbody: ' + totalAppts + ' appointments found, ' + totalBlocked + ' slots blocked across ' + Object.keys(bookedRanges).length + ' dates');
 
     return res.status(200).json({
       source: 'mindbody',
       startDate: startDate,
       endDate: endDate,
       chamber: chamber || 'all',
-      bookedCount: bookedCount,
+      bookedCount: totalBlocked,
+      appointments: totalAppts,
       availability: availability
     });
 
@@ -189,6 +203,18 @@ module.exports = async (req, res) => {
   }
 };
 
+
+// ── Helper: convert "H:MM AM/PM" to minutes since midnight ──
+function timeStringToMinutes(timeStr) {
+  var parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!parts) return 0;
+  var h = parseInt(parts[1]);
+  var m = parseInt(parts[2]);
+  var ampm = parts[3].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+}
 
 // ── Helper: format Date to "H:MM AM/PM" ──
 function formatTime(dt) {

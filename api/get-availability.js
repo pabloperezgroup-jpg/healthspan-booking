@@ -1,9 +1,19 @@
 // Vercel Serverless Function: /api/get-availability
-// Pulls real-time HBOT chamber availability from Mindbody API v6.
-// Returns available time slots for a given date range and chamber type.
+// Returns HBOT chamber availability by cross-referencing our schedule
+// with existing Mindbody appointments (booked slots).
+
+var STAFF_IDS = {
+  soft: 100000015,
+  hard: 100000027
+};
+
+var SLOTS = {
+  weekday: ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','5:00 PM','7:00 PM'],
+  friday:  ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','4:00 PM','5:00 PM'],
+  weekend: ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM']
+};
 
 module.exports = async (req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -43,87 +53,113 @@ module.exports = async (req, res) => {
     }
 
     var accessToken = tokenData.AccessToken;
+    var headers = {
+      'Api-Key': process.env.MINDBODY_API_KEY,
+      'SiteId': process.env.MINDBODY_SITE_ID,
+      'Authorization': accessToken
+    };
 
-    var params = new URLSearchParams({
-      StartDate: startDate,
-      EndDate: endDate,
-      Limit: 200
-    });
-
-    if (chamber === 'soft' && process.env.MINDBODY_HBOT_SOFT_SESSION_TYPE_ID) {
-      params.append('SessionTypeIds', process.env.MINDBODY_HBOT_SOFT_SESSION_TYPE_ID);
-    } else if (chamber === 'hard' && process.env.MINDBODY_HBOT_HARD_SESSION_TYPE_ID) {
-      params.append('SessionTypeIds', process.env.MINDBODY_HBOT_HARD_SESSION_TYPE_ID);
+    var staffIds = [];
+    if (chamber === 'soft') {
+      staffIds = [STAFF_IDS.soft];
+    } else if (chamber === 'hard') {
+      staffIds = [STAFF_IDS.hard];
+    } else {
+      staffIds = [STAFF_IDS.soft, STAFF_IDS.hard];
     }
 
-    var availResponse = await fetch(
-      'https://api.mindbodyonline.com/public/v6/appointment/bookableitems?' + params.toString(),
-      {
-        method: 'GET',
-        headers: {
-          'Api-Key': process.env.MINDBODY_API_KEY,
-          'SiteId': process.env.MINDBODY_SITE_ID,
-          'Authorization': accessToken
-        }
-      }
-    );
+    var bookedSlots = {};
 
-    var availData = await availResponse.json();
+    for (var i = 0; i < staffIds.length; i++) {
+      var staffId = staffIds[i];
+      var offset = 0;
+      var hasMore = true;
 
-    if (!availResponse.ok) {
-      console.error('Mindbody availability error:', availData);
-      return fallbackAvailability(req, res, startDate, endDate);
-    }
-
-    var slotsByDate = {};
-
-    var items = availData.BookableItems || availData.AvailableItems || [];
-    items.forEach(function(item) {
-      if (!item.StartDateTime) return;
-
-      var dt = new Date(item.StartDateTime);
-      var dateKey = dt.toISOString().split('T')[0];
-
-      var hours = dt.getHours();
-      var minutes = dt.getMinutes();
-      var ampm = hours >= 12 ? 'PM' : 'AM';
-      var displayHours = hours % 12 || 12;
-      var displayMinutes = minutes === 0 ? '00' : String(minutes).padStart(2, '0');
-      var timeStr = displayHours + ':' + displayMinutes + ' ' + ampm;
-
-      if (!slotsByDate[dateKey]) slotsByDate[dateKey] = [];
-
-      var exists = slotsByDate[dateKey].some(function(s) { return s.time === timeStr; });
-      if (!exists) {
-        slotsByDate[dateKey].push({
-          time: timeStr,
-          booked: false,
-          staffId: item.Staff ? item.Staff.Id : null,
-          staffName: item.Staff ? item.Staff.DisplayName : null,
-          sessionTypeId: item.SessionType ? item.SessionType.Id : null,
-          mindbodyId: item.Id || null
+      while (hasMore) {
+        var params = new URLSearchParams({
+          StartDate: startDate,
+          EndDate: endDate,
+          StaffIds: staffId.toString(),
+          Limit: 200,
+          Offset: offset
         });
+
+        var apptResponse = await fetch(
+          'https://api.mindbodyonline.com/public/v6/appointment/appointments?' + params.toString(),
+          { method: 'GET', headers: headers }
+        );
+
+        var apptText = await apptResponse.text();
+        var apptData;
+        try {
+          apptData = JSON.parse(apptText);
+        } catch(parseErr) {
+          console.error('Mindbody appointments returned non-JSON:', apptText.substring(0, 200));
+          break;
+        }
+
+        if (!apptResponse.ok) {
+          console.error('Mindbody appointments error:', apptData);
+          break;
+        }
+
+        var appointments = apptData.Appointments || [];
+
+        appointments.forEach(function(appt) {
+          if (appt.Status === 'Cancelled' || appt.Status === 'NoShow') return;
+          if (!appt.StartDateTime) return;
+
+          var dt = new Date(appt.StartDateTime);
+          var dateKey = dt.toISOString().split('T')[0];
+          var timeStr = formatTime(dt);
+
+          if (!bookedSlots[dateKey]) bookedSlots[dateKey] = [];
+          if (!bookedSlots[dateKey].includes(timeStr)) {
+            bookedSlots[dateKey].push(timeStr);
+          }
+        });
+
+        var totalCount = apptData.PaginationResponse ? apptData.PaginationResponse.TotalResults : 0;
+        offset += appointments.length;
+        hasMore = offset < totalCount && appointments.length > 0;
       }
-    });
-
-    Object.keys(slotsByDate).forEach(function(dateKey) {
-      slotsByDate[dateKey].sort(function(a, b) {
-        return parseTime(a.time) - parseTime(b.time);
-      });
-    });
-
-    // If Mindbody returned no bookable slots, use fallback schedule
-    if (Object.keys(slotsByDate).length === 0) {
-      console.log('Mindbody returned 0 slots, using fallback schedule');
-      return fallbackAvailability(req, res, startDate, endDate);
     }
+
+    var availability = {};
+    var current = new Date(startDate + 'T00:00:00');
+    var end = new Date(endDate + 'T00:00:00');
+
+    while (current <= end) {
+      var dateKey = current.toISOString().split('T')[0];
+      var dayOfWeek = current.getDay();
+
+      var base;
+      if (dayOfWeek === 0 || dayOfWeek === 6) base = SLOTS.weekend;
+      else if (dayOfWeek === 5) base = SLOTS.friday;
+      else base = SLOTS.weekday;
+
+      var dateBooked = bookedSlots[dateKey] || [];
+
+      availability[dateKey] = base.map(function(time) {
+        return {
+          time: time,
+          booked: dateBooked.includes(time)
+        };
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    var bookedCount = Object.values(bookedSlots).reduce(function(sum, arr) { return sum + arr.length; }, 0);
+    console.log('Mindbody: found ' + bookedCount + ' booked slots across ' + Object.keys(bookedSlots).length + ' dates');
 
     return res.status(200).json({
       source: 'mindbody',
       startDate: startDate,
       endDate: endDate,
       chamber: chamber || 'all',
-      availability: slotsByDate
+      bookedCount: bookedCount,
+      availability: availability
     });
 
   } catch (err) {
@@ -132,18 +168,14 @@ module.exports = async (req, res) => {
   }
 };
 
-
-function parseTime(timeStr) {
-  var parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!parts) return 0;
-  var h = parseInt(parts[1], 10);
-  var m = parseInt(parts[2], 10);
-  var ampm = parts[3].toUpperCase();
-  if (ampm === 'PM' && h !== 12) h += 12;
-  if (ampm === 'AM' && h === 12) h = 0;
-  return h * 60 + m;
+function formatTime(dt) {
+  var hours = dt.getHours();
+  var minutes = dt.getMinutes();
+  var ampm = hours >= 12 ? 'PM' : 'AM';
+  var displayHours = hours % 12 || 12;
+  var displayMinutes = minutes === 0 ? '00' : String(minutes).padStart(2, '0');
+  return displayHours + ':' + displayMinutes + ' ' + ampm;
 }
-
 
 async function fallbackAvailability(req, res, startDate, endDate) {
   try {
@@ -156,12 +188,6 @@ async function fallbackAvailability(req, res, startDate, endDate) {
       supabase.from('bookings').select('booking_date,booking_time')
         .gte('booking_date', startDate).eq('status', 'confirmed')
     ]);
-
-    var SLOTS = {
-      weekday: ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','5:00 PM','7:00 PM'],
-      friday:  ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','4:00 PM','5:00 PM'],
-      weekend: ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM']
-    };
 
     var overrideMap = {};
     (overrides || []).forEach(function(r) {
@@ -183,28 +209,21 @@ async function fallbackAvailability(req, res, startDate, endDate) {
       var dateKey = current.toISOString().split('T')[0];
       var dayOfWeek = current.getDay();
 
-      {
-        var base;
-        if (dayOfWeek === 0) base = SLOTS.weekend; // Sunday open
-        else if (dayOfWeek === 6) base = SLOTS.weekend;
-        else if (dayOfWeek === 5) base = SLOTS.friday;
-        else base = SLOTS.weekday;
+      var base;
+      if (dayOfWeek === 0 || dayOfWeek === 6) base = SLOTS.weekend;
+      else if (dayOfWeek === 5) base = SLOTS.friday;
+      else base = SLOTS.weekday;
 
-        var dateOverrides = overrideMap[dateKey] || {};
-        var dateBooked = bookedMap[dateKey] || [];
+      var dateOverrides = overrideMap[dateKey] || {};
+      var dateBooked = bookedMap[dateKey] || [];
 
-        var slots = base.map(function(time) {
-          var isBooked = dateBooked.includes(time);
-          var override = dateOverrides[time];
-          if (override === false) return { time: time, booked: true };
-          if (override === true) return { time: time, booked: false };
-          return { time: time, booked: isBooked };
-        }).filter(function(s) { return !s.booked; });
-
-        if (slots.length > 0) {
-          availability[dateKey] = slots;
-        }
-      }
+      availability[dateKey] = base.map(function(time) {
+        var isBooked = dateBooked.includes(time);
+        var override = dateOverrides[time];
+        if (override === false) return { time: time, booked: true };
+        if (override === true) return { time: time, booked: false };
+        return { time: time, booked: isBooked };
+      });
 
       current.setDate(current.getDate() + 1);
     }
@@ -220,4 +239,4 @@ async function fallbackAvailability(req, res, startDate, endDate) {
     console.error('Fallback availability error:', fallbackErr);
     return res.status(500).json({ error: 'Unable to load availability' });
   }
-          }
+}

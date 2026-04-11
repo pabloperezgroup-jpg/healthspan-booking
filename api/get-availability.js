@@ -292,6 +292,6 @@ async function fallbackAvailability(req, res, startDate, endDate) {
 
   } catch (fallbackErr) {
     console.error('Fallback availability error:', fallbackErr);
-    return res.status(500).json({ error: 'Unable to load availability' });
+    return res.status(200).json({ error: 'Unable to load availability' });
   }
 }

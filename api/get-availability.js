@@ -1,12 +1,20 @@
 // Vercel Serverless Function: /api/get-availability
 // Returns HBOT chamber availability by cross-referencing our schedule
 // with existing Mindbody appointments (booked slots).
+//
+// Approach:
+// 1. Start with hardcoded operating hours (weekday/friday/weekend)
+// 2. Query Mindbody /appointment/staffappointments to get existing bookings
+// 3. Mark any slot that matches a booked appointment as booked:true
+// 4. Fall back to Supabase if Mindbody is unreachable
 
+// Staff IDs (chambers set up as staff in Mindbody)
 var STAFF_IDS = {
-  soft: 100000015,
-  hard: 100000027
+  soft: 100000015,  // HBOT 1(60m) = Soft Chamber
+  hard: 100000027   // HBOT 2*    = Hard Chamber
 };
 
+// Operating hours
 var SLOTS = {
   weekday: ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','5:00 PM','7:00 PM'],
   friday:  ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM','4:00 PM','5:00 PM'],
@@ -14,6 +22,7 @@ var SLOTS = {
 };
 
 module.exports = async (req, res) => {
+  // ── CORS ──
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -23,6 +32,7 @@ module.exports = async (req, res) => {
   try {
     var { startDate, endDate, chamber } = req.query;
 
+    // Default: today + 90 days
     if (!startDate) {
       var today = new Date();
       startDate = today.toISOString().split('T')[0];
@@ -33,6 +43,7 @@ module.exports = async (req, res) => {
       endDate = futureDate.toISOString().split('T')[0];
     }
 
+    // ── Step 1: Get Mindbody token ──
     var tokenResponse = await fetch('https://api.mindbodyonline.com/public/v6/usertoken/issue', {
       method: 'POST',
       headers: {
@@ -59,6 +70,7 @@ module.exports = async (req, res) => {
       'Authorization': accessToken
     };
 
+    // ── Step 2: Determine which staff (chamber) to query ──
     var staffIds = [];
     if (chamber === 'soft') {
       staffIds = [STAFF_IDS.soft];
@@ -68,8 +80,12 @@ module.exports = async (req, res) => {
       staffIds = [STAFF_IDS.soft, STAFF_IDS.hard];
     }
 
-    var bookedSlots = {};
+    // ── Step 3: Query existing appointments from Mindbody ──
+    // Fetch appointments for each staff/chamber
+    var bookedSlots = {}; // { "2026-04-12": ["9:00 AM", "1:00 PM"], ... }
 
+    // Mindbody limits date ranges, so query in chunks if needed
+    // For now, query all at once (works for reasonable ranges)
     for (var i = 0; i < staffIds.length; i++) {
       var staffId = staffIds[i];
       var offset = 0;
@@ -85,10 +101,11 @@ module.exports = async (req, res) => {
         });
 
         var apptResponse = await fetch(
-          'https://api.mindbodyonline.com/public/v6/appointment/appointments?' + params.toString(),
+          'https://api.mindbodyonline.com/public/v6/appointment/staffappointments?' + params.toString(),
           { method: 'GET', headers: headers }
         );
 
+        // Handle non-JSON responses gracefully
         var apptText = await apptResponse.text();
         var apptData;
         try {
@@ -103,9 +120,10 @@ module.exports = async (req, res) => {
           break;
         }
 
-        var appointments = apptData.Appointments || [];
+        var appointments = apptData.Appointments || apptData.StaffAppointments || [];
 
         appointments.forEach(function(appt) {
+          // Only count confirmed/completed appointments, not cancelled
           if (appt.Status === 'Cancelled' || appt.Status === 'NoShow') return;
           if (!appt.StartDateTime) return;
 
@@ -119,12 +137,14 @@ module.exports = async (req, res) => {
           }
         });
 
+        // Check if there are more pages
         var totalCount = apptData.PaginationResponse ? apptData.PaginationResponse.TotalResults : 0;
         offset += appointments.length;
         hasMore = offset < totalCount && appointments.length > 0;
       }
     }
 
+    // ── Step 4: Build availability by merging schedule with booked slots ──
     var availability = {};
     var current = new Date(startDate + 'T00:00:00');
     var end = new Date(endDate + 'T00:00:00');
@@ -133,6 +153,7 @@ module.exports = async (req, res) => {
       var dateKey = current.toISOString().split('T')[0];
       var dayOfWeek = current.getDay();
 
+      // Get base schedule for this day type
       var base;
       if (dayOfWeek === 0 || dayOfWeek === 6) base = SLOTS.weekend;
       else if (dayOfWeek === 5) base = SLOTS.friday;
@@ -168,6 +189,8 @@ module.exports = async (req, res) => {
   }
 };
 
+
+// ── Helper: format Date to "H:MM AM/PM" ──
 function formatTime(dt) {
   var hours = dt.getHours();
   var minutes = dt.getMinutes();
@@ -177,6 +200,8 @@ function formatTime(dt) {
   return displayHours + ':' + displayMinutes + ' ' + ampm;
 }
 
+
+// ── Fallback: Supabase-based availability if Mindbody is down ──
 async function fallbackAvailability(req, res, startDate, endDate) {
   try {
     var { createClient } = require('@supabase/supabase-js');
@@ -209,6 +234,7 @@ async function fallbackAvailability(req, res, startDate, endDate) {
       var dateKey = current.toISOString().split('T')[0];
       var dayOfWeek = current.getDay();
 
+      // Sundays and Saturdays use weekend hours
       var base;
       if (dayOfWeek === 0 || dayOfWeek === 6) base = SLOTS.weekend;
       else if (dayOfWeek === 5) base = SLOTS.friday;

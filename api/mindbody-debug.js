@@ -1,5 +1,5 @@
 // Temporary diagnostic endpoint — v2
-// Shows raw response from Mindbody appointments endpoint
+// Shows raw response from Mindbody staffappointments endpoint
 // DELETE THIS FILE after debugging is complete
 
 module.exports = async (req, res) => {
@@ -8,7 +8,6 @@ module.exports = async (req, res) => {
 
   var results = { env: {}, token: null, staff: null, appointmentsRaw: null };
 
-  // Check which env vars are set (don't reveal values)
   results.env = {
     MINDBODY_API_KEY: !!process.env.MINDBODY_API_KEY,
     MINDBODY_SITE_ID: !!process.env.MINDBODY_SITE_ID,
@@ -18,7 +17,6 @@ module.exports = async (req, res) => {
   };
 
   try {
-    // Step 1: Get token
     var tokenRes = await fetch('https://api.mindbodyonline.com/public/v6/usertoken/issue', {
       method: 'POST',
       headers: {
@@ -49,7 +47,6 @@ module.exports = async (req, res) => {
       'Authorization': tokenData.AccessToken
     };
 
-    // Step 2: Quick staff check (this works)
     try {
       var staffRes = await fetch('https://api.mindbodyonline.com/public/v6/staff/staff?Limit=5', {
         headers: headers
@@ -64,14 +61,12 @@ module.exports = async (req, res) => {
       results.staff = { error: e.message };
     }
 
-    // Step 3: Appointments — capture RAW response text + status
     try {
       var tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       var apptDate = tomorrow.toISOString().split('T')[0];
 
-      // Try WITHOUT StaffIds first (simplest call)
-      var url1 = 'https://api.mindbodyonline.com/public/v6/appointment/appointments?StartDate=' + apptDate + '&EndDate=' + apptDate;
+      var url1 = 'https://api.mindbodyonline.com/public/v6/appointment/staffappointments?StartDate=' + apptDate + '&EndDate=' + apptDate;
       var apptRes1 = await fetch(url1, { headers: headers });
       var rawText1 = await apptRes1.text();
 
@@ -84,13 +79,13 @@ module.exports = async (req, res) => {
         isJSON: rawText1.trim().startsWith('{') || rawText1.trim().startsWith('[')
       };
 
-      // If that worked as JSON, parse it
       if (results.appointmentsRaw.isJSON) {
         try {
           var parsed = JSON.parse(rawText1);
           results.appointmentsRaw.parsed = {
-            appointmentCount: (parsed.Appointments || []).length,
-            first2: (parsed.Appointments || []).slice(0, 2).map(function(a) {
+            keys: Object.keys(parsed),
+            appointmentCount: (parsed.Appointments || parsed.StaffAppointments || []).length,
+            first2: (parsed.Appointments || parsed.StaffAppointments || []).slice(0, 2).map(function(a) {
               return {
                 Id: a.Id,
                 StartDateTime: a.StartDateTime,
@@ -105,8 +100,7 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Step 4: Also try WITH StaffIds for soft chamber
-      var url2 = 'https://api.mindbodyonline.com/public/v6/appointment/appointments?StartDate=' + apptDate + '&EndDate=' + apptDate + '&StaffIds=100000015';
+      var url2 = 'https://api.mindbodyonline.com/public/v6/appointment/staffappointments?StartDate=' + apptDate + '&EndDate=' + apptDate + '&StaffIds=100000015';
       var apptRes2 = await fetch(url2, { headers: headers });
       var rawText2 = await apptRes2.text();
 
@@ -122,8 +116,9 @@ module.exports = async (req, res) => {
         try {
           var parsed2 = JSON.parse(rawText2);
           results.appointmentsWithStaff.parsed = {
-            appointmentCount: (parsed2.Appointments || []).length,
-            first2: (parsed2.Appointments || []).slice(0, 2).map(function(a) {
+            keys: Object.keys(parsed2),
+            appointmentCount: (parsed2.Appointments || parsed2.StaffAppointments || []).length,
+            first2: (parsed2.Appointments || parsed2.StaffAppointments || []).slice(0, 2).map(function(a) {
               return {
                 Id: a.Id,
                 StartDateTime: a.StartDateTime,

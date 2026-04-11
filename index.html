@@ -1042,6 +1042,23 @@ const SLOTS = {
   weekend: ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM']
 };
 
+function isTimePast(date, timeStr) {
+  const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const check = new Date(date); check.setHours(0,0,0,0);
+  if (check.getTime() !== today.getTime()) return false;
+  // Parse "7:00 AM" / "1:00 PM" etc
+  const parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!parts) return false;
+  let h = parseInt(parts[1]);
+  const m = parseInt(parts[2]);
+  const ampm = parts[3].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  const slotTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+  return now >= slotTime;
+}
+
 function getSlotsForDate(date) {
   const day = date.getDay();
   const ds = dateStr(date);
@@ -1050,7 +1067,7 @@ function getSlotsForDate(date) {
   if (window._mindbodySlots && window._mindbodySlots[ds]) {
     return window._mindbodySlots[ds].map(slot => ({
       time: slot.time,
-      booked: slot.booked || false
+      booked: slot.booked || isTimePast(date, slot.time)
     }));
   }
 
@@ -1064,6 +1081,7 @@ function getSlotsForDate(date) {
   else base = SLOTS.weekday;
 
   return base.map(time => {
+    if (isTimePast(date, time)) return { time, booked: true };
     const isBooked = booked.includes(time);
     const override = overrides[time];
     if (override === false) return { time, booked: true };
@@ -1073,7 +1091,6 @@ function getSlotsForDate(date) {
 }
 
 function hasAvailability(date) {
-  if (date.getDay() === 0) return false;
   return getSlotsForDate(date).some(s => !s.booked);
 }
 
@@ -1175,6 +1192,12 @@ function renderTimeSlots() {
   const d = state.date;
   document.getElementById('time-title').textContent =
     `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`;
+
+  const available = slots.filter(s => !s.booked);
+  if (available.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px 16px;color:var(--gray);font-size:15px;font-weight:600;">No times available for this date. Please pick another day.</div>';
+    return;
+  }
 
   grid.innerHTML = slots.map(s => `
     <div class="time-pill ${s.booked ? 'booked' : ''} ${state.time === s.time ? 'selected' : ''}"

@@ -1261,34 +1261,50 @@ async function handleBookBtn() {
 // ════════════════════════════════════════════
 async function initStripePayment() {
   stripeInitialized = true;
+  var container = document.getElementById('stripe-payment-element');
+  container.innerHTML = '<div style="color:#6B7280;font-size:14px;padding:16px;text-align:center;">Loading payment form...</div>';
   try {
     const amount = state.chamber === 'soft' ? 49 : 99;
     const email = document.getElementById('email').value.trim() || 'guest@healthspan.com';
 
+    console.log('[Stripe] Creating payment intent:', { amount, chamber: state.chamber, email });
     const res = await fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: amount, chamber: state.chamber, email: email })
     });
 
+    console.log('[Stripe] Payment intent response status:', res.status);
+
     // Safe JSON parse
     var data;
     try {
       data = await res.json();
     } catch (parseErr) {
-      throw new Error('Server returned an invalid response');
+      console.error('[Stripe] Non-JSON response from create-payment-intent');
+      throw new Error('Server returned an invalid response (status ' + res.status + ')');
     }
-    if (data.error) throw new Error(data.error);
+    if (data.error) {
+      console.error('[Stripe] API error:', data.error);
+      throw new Error(data.error);
+    }
 
+    console.log('[Stripe] Got clientSecret, mounting Payment Element');
     stripeElements = stripe.elements({ clientSecret: data.clientSecret });
     var el = stripeElements.create('payment', { layout: 'tabs' });
-    document.getElementById('stripe-payment-element').innerHTML = '';
+    container.innerHTML = '';
     el.mount('#stripe-payment-element');
+    console.log('[Stripe] Payment Element mounted successfully');
   } catch(e) {
+    console.error('[Stripe] Init error:', e.message);
     stripeInitialized = false; // Reset so user can retry
     stripeElements = null;
-    document.getElementById('stripe-payment-element').innerHTML =
-      '<div style="color:#EF4444;font-size:14px;padding:16px;background:#FEF2F2;border-radius:8px;">Could not load payment form. Please refresh and try again.</div>';
+    container.innerHTML =
+      '<div style="color:#EF4444;font-size:14px;padding:20px;background:#FEF2F2;border-radius:8px;text-align:center;">' +
+      '<div style="font-weight:600;margin-bottom:8px;">Payment form could not load</div>' +
+      '<div style="color:#6B7280;font-size:13px;margin-bottom:12px;">' + e.message + '</div>' +
+      '<button onclick="initStripePayment()" style="background:#0C6B58;color:white;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:14px;">Try Again</button>' +
+      '</div>';
   }
 }
 

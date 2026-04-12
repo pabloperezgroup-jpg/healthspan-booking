@@ -1402,9 +1402,20 @@ async function completeBooking() {
       return;
     }
 
-    if (!res.ok) throw new Error(result.error || 'Booking failed');
+    if (!res.ok) {
+      msgEl.textContent = result.error || 'Booking could not be completed. Your payment was processed — please call 786-713-1222 to confirm your session.';
+      msgEl.style.display = 'block';
+      btn.textContent = `Book & Pay My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+      btn.disabled = false;
+      return;
+    }
   } catch(e) {
-    console.error('Server booking error (payment succeeded):', e.message);
+    console.error('Server booking error:', e.message);
+    msgEl.textContent = 'Something went wrong completing your booking. Your payment was processed — please call 786-713-1222 to confirm.';
+    msgEl.style.display = 'block';
+    btn.textContent = `Book & Pay My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.disabled = false;
+    return;
   }
 
   showConfirmation({ ...booking, date: state.date });

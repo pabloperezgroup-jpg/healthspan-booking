@@ -1290,8 +1290,13 @@ async function initStripePayment() {
     }
 
     console.log('[Stripe] Got clientSecret, mounting Payment Element');
-    stripeElements = stripe.elements({ clientSecret: data.clientSecret });
-    var el = stripeElements.create('payment', { layout: 'tabs' });
+    stripeElements = stripe.elements({ clientSecret: data.clientSecret, appearance: { theme: 'stripe' } });
+    var el = stripeElements.create('payment', {
+      layout: 'tabs',
+      fields: { billingDetails: 'auto' },
+      wallets: { applePay: 'never', googlePay: 'never' },
+      terms: { card: 'never' }
+    });
     container.innerHTML = '';
     el.mount('#stripe-payment-element');
     console.log('[Stripe] Payment Element mounted successfully');

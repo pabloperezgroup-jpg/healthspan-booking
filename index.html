@@ -1294,7 +1294,7 @@ async function initStripePayment() {
     var el = stripeElements.create('payment', {
       layout: 'tabs',
       fields: { billingDetails: 'auto' },
-      wallets: { applePay: 'never', googlePay: 'never' },
+      wallets: { link: 'never' },
       terms: { card: 'never' }
     });
     container.innerHTML = '';

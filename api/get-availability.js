@@ -190,26 +190,31 @@ module.exports = async (req, res) => {
         return { time: time, booked: isBlocked, minutes: slotStart };
       });
 
-      // If there are bookings on this day, scan for gap slots at :15, :30, :45
+      // If there are bookings on this day, check for gap slots.
+      // Rule: only show a gap slot (:15, :30, :45) when the hourly slot is BLOCKED.
+      // Show only the EARLIEST available gap per blocked hour — keeps it clean.
       if (dateRanges.length > 0) {
-        var hourlyMinutes = {};
-        slots.forEach(function(s) { hourlyMinutes[s.minutes] = true; });
+        var blockedHours = [];
+        slots.forEach(function(s) {
+          if (s.booked) blockedHours.push(s.minutes);
+        });
 
-        for (var m = dayOpen; m <= dayClose - 60; m += 15) {
-          // Skip if this is already an hourly slot
-          if (hourlyMinutes[m]) continue;
-
-          // Check if a 60-min session fits here (no overlap with any appointment)
-          var gapStart = m;
-          var gapEnd = m + 60;
-          var isClear = !dateRanges.some(function(range) {
-            return range.start < gapEnd && range.end > gapStart;
-          });
-
-          if (isClear) {
-            slots.push({ time: minutesToTimeString(m), booked: false, minutes: m });
+        blockedHours.forEach(function(hourStart) {
+          // Try :15, :30, :45 — take the first one that fits a 60-min session
+          var offsets = [15, 30, 45];
+          for (var i = 0; i < offsets.length; i++) {
+            var m = hourStart + offsets[i];
+            if (m > dayClose - 60) break; // Past operating hours
+            var gapEnd = m + 60;
+            var isClear = !dateRanges.some(function(range) {
+              return range.start < gapEnd && range.end > m;
+            });
+            if (isClear) {
+              slots.push({ time: minutesToTimeString(m), booked: false, minutes: m });
+              break; // Only show the earliest gap slot per blocked hour
+            }
           }
-        }
+        });
 
         // Sort all slots by time
         slots.sort(function(a, b) { return a.minutes - b.minutes; });

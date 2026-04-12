@@ -150,8 +150,9 @@ module.exports = async (req, res) => {
 
     // ── Step 4: Build availability by checking time range overlaps ──
     // A slot is "booked" if ANY appointment overlaps with its 60-minute window.
-    // Example: slot at 11:00 AM = [660, 720]. If an appointment runs [690, 750]
-    // (11:30-12:30), it overlaps → slot is blocked.
+    // Additionally, when hourly slots are blocked, check 15-min increments
+    // for gap slots (e.g. 1:15 PM becomes available when a 90-min session
+    // ends at 1:00 and the next starts at 2:30).
     var availability = {};
     var totalBlocked = 0;
     var current = new Date(startDate + 'T00:00:00');
@@ -169,19 +170,51 @@ module.exports = async (req, res) => {
 
       var dateRanges = bookedRanges[dateKey] || [];
 
-      availability[dateKey] = base.map(function(time) {
-        // Convert slot time string to minutes since midnight
-        var slotStart = timeStringToMinutes(time);
-        var slotEnd = slotStart + 60; // 60-minute session window
+      // Operating window for this day (first slot start → last slot start + 60)
+      var dayOpen = timeStringToMinutes(base[0]);
+      var dayClose = timeStringToMinutes(base[base.length - 1]) + 60;
 
-        // Check if ANY appointment overlaps with this slot's window
+      // Start with hourly slots
+      var slots = base.map(function(time) {
+        var slotStart = timeStringToMinutes(time);
+        var slotEnd = slotStart + 60;
+
         var isBlocked = dateRanges.some(function(range) {
-          // Overlap exists if: appt starts before slot ends AND appt ends after slot starts
           return range.start < slotEnd && range.end > slotStart;
         });
 
         if (isBlocked) totalBlocked++;
-        return { time: time, booked: isBlocked };
+        return { time: time, booked: isBlocked, minutes: slotStart };
+      });
+
+      // If there are bookings on this day, scan for gap slots at :15, :30, :45
+      if (dateRanges.length > 0) {
+        var hourlyMinutes = {};
+        slots.forEach(function(s) { hourlyMinutes[s.minutes] = true; });
+
+        for (var m = dayOpen; m <= dayClose - 60; m += 15) {
+          // Skip if this is already an hourly slot
+          if (hourlyMinutes[m]) continue;
+
+          // Check if a 60-min session fits here (no overlap with any appointment)
+          var gapStart = m;
+          var gapEnd = m + 60;
+          var isClear = !dateRanges.some(function(range) {
+            return range.start < gapEnd && range.end > gapStart;
+          });
+
+          if (isClear) {
+            slots.push({ time: minutesToTimeString(m), booked: false, minutes: m });
+          }
+        }
+
+        // Sort all slots by time
+        slots.sort(function(a, b) { return a.minutes - b.minutes; });
+      }
+
+      // Strip the helper 'minutes' field from output
+      availability[dateKey] = slots.map(function(s) {
+        return { time: s.time, booked: s.booked };
       });
 
       current.setDate(current.getDate() + 1);
@@ -217,6 +250,16 @@ function timeStringToMinutes(timeStr) {
   if (ampm === 'PM' && h !== 12) h += 12;
   if (ampm === 'AM' && h === 12) h = 0;
   return h * 60 + m;
+}
+
+// ── Helper: convert minutes since midnight to "H:MM AM/PM" ──
+function minutesToTimeString(totalMinutes) {
+  var h = Math.floor(totalMinutes / 60);
+  var m = totalMinutes % 60;
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  var dh = h % 12 || 12;
+  var dm = m === 0 ? '00' : String(m).padStart(2, '0');
+  return dh + ':' + dm + ' ' + ampm;
 }
 
 // ── Helper: format Date to "H:MM AM/PM" ──
@@ -292,6 +335,6 @@ async function fallbackAvailability(req, res, startDate, endDate) {
 
   } catch (fallbackErr) {
     console.error('Fallback availability error:', fallbackErr);
-    return res.status(200).json({ error: 'Unable to load availability' });
+    return res.status(500).json({ error: 'Unable to load availability' });
   }
 }

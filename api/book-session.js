@@ -163,12 +163,25 @@ module.exports = async (req, res) => {
       utm_source: utm_source, utm_medium: utm_medium,
       utm_campaign: utm_campaign, utm_content: utm_content, utm_term: utm_term
     }).catch(function(ghlErr) {
-      // Fire and forget — don't block the booking confirmation
       console.error('GHL push error:', ghlErr.message);
     });
 
     // ════════════════════════════════════════════
-    // STEP 6: Return confirmation
+    // STEP 6: Send confirmation email + SMS
+    // Fire and forget — don't block the response
+    // ════════════════════════════════════════════
+    sendConfirmationEmail(firstName, normalizedEmail, chamber, date, time, amountCents)
+      .catch(function(emailErr) {
+        console.error('Confirmation email error:', emailErr.message);
+      });
+
+    sendConfirmationSMS(phone, firstName, chamber, date, time)
+      .catch(function(smsErr) {
+        console.error('Confirmation SMS error:', smsErr.message);
+      });
+
+    // ════════════════════════════════════════════
+    // STEP 7: Return confirmation
     // ════════════════════════════════════════════
     return res.status(200).json({
       success: true,
@@ -488,4 +501,127 @@ async function pushToGHL(firstName, lastName, email, phone, chamber, date, time,
   }
 
   return result;
+}
+
+
+// ════════════════════════════════════════════
+// CONFIRMATION EMAIL via Resend
+// Single email: booking details + payment receipt
+// ════════════════════════════════════════════
+async function sendConfirmationEmail(firstName, email, chamber, date, time, amountCents) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  var { Resend } = require('resend');
+  var resend = new Resend(process.env.RESEND_API_KEY);
+
+  var chamberName = chamber === 'soft' ? 'Soft Chamber (1.3 ATA)' : 'Hard Chamber (Up to 2.0 ATA)';
+  var amount = '$' + (amountCents / 100).toFixed(2);
+
+  // Format date nicely
+  var dateObj = new Date(date + 'T00:00:00');
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var formattedDate = days[dateObj.getDay()] + ', ' + months[dateObj.getMonth()] + ' ' + dateObj.getDate() + ', ' + dateObj.getFullYear();
+
+  var html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; color: #1a1a1a;">
+      <div style="background: #0C6B58; padding: 32px 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 600;">Session Confirmed</h1>
+      </div>
+      <div style="background: white; padding: 32px 24px; border: 1px solid #e5e7eb; border-top: none;">
+        <p style="font-size: 16px; margin: 0 0 24px;">Hi ${firstName},</p>
+        <p style="font-size: 16px; margin: 0 0 24px;">Your hyperbaric session is booked and confirmed. Here are your details:</p>
+
+        <div style="background: #f8faf9; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Chamber</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">${chamberName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Date</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">${formattedDate}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Time</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">${time}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Duration</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">60 minutes</td>
+            </tr>
+            <tr style="border-top: 1px solid #e5e7eb;">
+              <td style="padding: 12px 0 8px; color: #6b7280;">Amount Paid</td>
+              <td style="padding: 12px 0 8px; text-align: right; font-weight: 700; color: #0C6B58; font-size: 17px;">${amount}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="background: #f8faf9; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
+          <p style="margin: 0 0 4px; font-weight: 600; font-size: 15px;">Location</p>
+          <p style="margin: 0; font-size: 15px; color: #374151;">Healthspan Recovery<br>1441 Brickell Ave, Miami, FL</p>
+        </div>
+
+        <div style="margin: 0 0 24px;">
+          <p style="margin: 0 0 8px; font-weight: 600; font-size: 15px;">Before Your Session</p>
+          <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.6;">
+            Please arrive 10 minutes early. Wear comfortable clothing.
+            Avoid carbonated drinks 2 hours before your session.
+            If you have any questions, call us at 786-713-1222.
+          </p>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; text-align: center; font-size: 13px; color: #9ca3af;">
+        Healthspan Recovery &middot; 1441 Brickell Ave, Miami, FL
+      </div>
+    </div>
+  `;
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || 'Healthspan <booking@healthspanrecovery.com>',
+    to: email,
+    subject: 'Your HBOT Session is Confirmed — ' + formattedDate + ' at ' + time,
+    html: html
+  });
+}
+
+
+// ════════════════════════════════════════════
+// CONFIRMATION SMS via GoHighLevel
+// Short text with date/time/location
+// ════════════════════════════════════════════
+async function sendConfirmationSMS(phone, firstName, chamber, date, time) {
+  if (!process.env.GHL_API_KEY || !phone) return;
+
+  // Format date briefly
+  var dateObj = new Date(date + 'T00:00:00');
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var shortDate = days[dateObj.getDay()] + ', ' + months[dateObj.getMonth()] + ' ' + dateObj.getDate();
+
+  var message = 'Hi ' + firstName + '! Your HBOT session is confirmed: '
+    + shortDate + ' at ' + time
+    + '. Healthspan Recovery, 1441 Brickell Ave, Miami. '
+    + 'Arrive 10 min early. Questions? 786-713-1222';
+
+  // Use GHL conversations API to send SMS
+  var response = await fetch('https://services.leadconnectorhq.com/conversations/messages', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + process.env.GHL_API_KEY,
+      'Content-Type': 'application/json',
+      'Version': '2021-07-28'
+    },
+    body: JSON.stringify({
+      type: 'SMS',
+      phone: phone,
+      message: message,
+      locationId: process.env.GHL_LOCATION_ID || undefined
+    })
+  });
+
+  if (!response.ok) {
+    var result = await response.json();
+    throw new Error('GHL SMS error: ' + JSON.stringify(result));
+  }
 }

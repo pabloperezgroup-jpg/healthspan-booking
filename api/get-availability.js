@@ -226,7 +226,8 @@ module.exports = async (req, res) => {
     var totalAppts = Object.values(bookedRanges).reduce(function(sum, arr) { return sum + arr.length; }, 0);
     console.log('Mindbody: ' + totalAppts + ' appointments found, ' + totalBlocked + ' slots blocked across ' + Object.keys(bookedRanges).length + ' dates');
 
-    return res.status(200).json({
+    // Include debug info when ?debug=true is passed (temporary — remove after testing)
+    var response = {
       source: 'mindbody',
       startDate: startDate,
       endDate: endDate,
@@ -234,7 +235,11 @@ module.exports = async (req, res) => {
       bookedCount: totalBlocked,
       appointments: totalAppts,
       availability: availability
-    });
+    };
+    if (req.query.debug === 'true') {
+      response._debug_bookedRanges = bookedRanges;
+    }
+    return res.status(200).json(response);
 
   } catch (err) {
     console.error('get-availability error:', err);

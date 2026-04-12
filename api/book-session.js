@@ -25,12 +25,12 @@ module.exports = async (req, res) => {
     var {
       firstName, lastName, email, phone,
       chamber, date, time,
-      paymentMethodId,
+      paymentIntentId,
       utm_source, utm_medium, utm_campaign, utm_content, utm_term
     } = req.body;
 
     // ── Validate required fields ──
-    if (!firstName || !lastName || !email || !phone || !chamber || !date || !time || !paymentMethodId) {
+    if (!firstName || !lastName || !email || !phone || !chamber || !date || !time || !paymentIntentId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -55,40 +55,24 @@ module.exports = async (req, res) => {
     }
 
     // ════════════════════════════════════════════
-    // STEP 2: Charge via Stripe
+    // STEP 2: Verify Stripe payment succeeded
+    // Payment was already confirmed client-side via stripe.confirmPayment()
+    // We just retrieve and verify the PaymentIntent here
     // ════════════════════════════════════════════
-    // Create or retrieve Stripe customer
-    var customer;
-    var existingCustomers = await stripe.customers.list({ email: normalizedEmail, limit: 1 });
-    if (existingCustomers.data.length > 0) {
-      customer = existingCustomers.data[0];
-    } else {
-      customer = await stripe.customers.create({
-        email: normalizedEmail,
-        name: firstName + ' ' + lastName,
-        phone: phone
-      });
+    var paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ error: 'Payment not completed. Status: ' + paymentIntent.status });
     }
 
-    // Attach payment method
-    try {
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-    } catch (attachErr) {
-      if (!attachErr.message || !attachErr.message.includes('already been attached')) {
-        throw attachErr;
-      }
+    // Verify the amount matches (prevent tampering)
+    if (paymentIntent.amount !== amountCents) {
+      console.error('Amount mismatch: expected', amountCents, 'got', paymentIntent.amount);
+      return res.status(400).json({ error: 'Payment amount mismatch' });
     }
 
-    // Create and confirm payment
-    var paymentIntent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: 'usd',
-      customer: customer.id,
-      payment_method: paymentMethodId,
-      payment_method_types: ['card'],
-      confirm: true,
-      off_session: false,
-      receipt_email: normalizedEmail,
+    // Add booking metadata to the PaymentIntent for record-keeping
+    await stripe.paymentIntents.update(paymentIntentId, {
       metadata: {
         type: 'hbot_booking',
         chamber: chamber,
@@ -99,19 +83,10 @@ module.exports = async (req, res) => {
       }
     });
 
-    // Handle 3D Secure
-    if (paymentIntent.status === 'requires_action') {
-      return res.status(200).json({
-        success: false,
-        requiresAction: true,
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id
-      });
-    }
-
-    if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ error: 'Payment failed: ' + paymentIntent.status });
-    }
+    // Get or create Stripe customer for records
+    var customer = paymentIntent.customer
+      ? { id: paymentIntent.customer }
+      : { id: null };
 
     // ════════════════════════════════════════════
     // STEP 3: Book in Mindbody
@@ -159,12 +134,16 @@ module.exports = async (req, res) => {
     // ════════════════════════════════════════════
     // STEP 5: Push lead to GoHighLevel
     // ════════════════════════════════════════════
-    pushToGHL(firstName, lastName, normalizedEmail, phone, chamber, date, time, {
-      utm_source: utm_source, utm_medium: utm_medium,
-      utm_campaign: utm_campaign, utm_content: utm_content, utm_term: utm_term
-    }).catch(function(ghlErr) {
+    var ghlContactId = null;
+    try {
+      var ghlResult = await pushToGHL(firstName, lastName, normalizedEmail, phone, chamber, date, time, {
+        utm_source: utm_source, utm_medium: utm_medium,
+        utm_campaign: utm_campaign, utm_content: utm_content, utm_term: utm_term
+      });
+      ghlContactId = ghlResult && ghlResult.contact ? ghlResult.contact.id : null;
+    } catch (ghlErr) {
       console.error('GHL push error:', ghlErr.message);
-    });
+    }
 
     // ════════════════════════════════════════════
     // STEP 6: Send confirmation email + SMS
@@ -175,10 +154,12 @@ module.exports = async (req, res) => {
         console.error('Confirmation email error:', emailErr.message);
       });
 
-    sendConfirmationSMS(phone, firstName, chamber, date, time)
-      .catch(function(smsErr) {
-        console.error('Confirmation SMS error:', smsErr.message);
-      });
+    if (ghlContactId) {
+      sendConfirmationSMS(ghlContactId, firstName, chamber, date, time)
+        .catch(function(smsErr) {
+          console.error('Confirmation SMS error:', smsErr.message);
+        });
+    }
 
     // ════════════════════════════════════════════
     // STEP 7: Return confirmation
@@ -590,8 +571,8 @@ async function sendConfirmationEmail(firstName, email, chamber, date, time, amou
 // CONFIRMATION SMS via GoHighLevel
 // Short text with date/time/location
 // ════════════════════════════════════════════
-async function sendConfirmationSMS(phone, firstName, chamber, date, time) {
-  if (!process.env.GHL_API_KEY || !phone) return;
+async function sendConfirmationSMS(contactId, firstName, chamber, date, time) {
+  if (!process.env.GHL_API_KEY || !contactId) return;
 
   // Format date briefly
   var dateObj = new Date(date + 'T00:00:00');
@@ -604,7 +585,7 @@ async function sendConfirmationSMS(phone, firstName, chamber, date, time) {
     + '. Healthspan Recovery, 1441 Brickell Ave, Miami. '
     + 'Arrive 10 min early. Questions? 786-713-1222';
 
-  // Use GHL conversations API to send SMS
+  // Use GHL conversations API to send SMS (requires contactId, not phone)
   var response = await fetch('https://services.leadconnectorhq.com/conversations/messages', {
     method: 'POST',
     headers: {
@@ -614,9 +595,8 @@ async function sendConfirmationSMS(phone, firstName, chamber, date, time) {
     },
     body: JSON.stringify({
       type: 'SMS',
-      phone: phone,
-      message: message,
-      locationId: process.env.GHL_LOCATION_ID || undefined
+      contactId: contactId,
+      message: message
     })
   });
 

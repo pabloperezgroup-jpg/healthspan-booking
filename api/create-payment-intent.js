@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
     var paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
-      receipt_email: customerEmail,
+      // No receipt_email — we send a single combined confirmation via Resend instead
       metadata: {
         type: 'hbot_booking',
         chamber: chamber,
@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
         discount: '100',
         customer_email: customerEmail
       },
-      automatic_payment_methods: { enabled: true }
+      payment_method_types: ['card']
     });
 
     return res.status(200).json({

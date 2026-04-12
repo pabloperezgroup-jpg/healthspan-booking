@@ -1505,10 +1505,17 @@ function captureLead() {
   }).catch(() => {}); // Silent fail
 }
 
-// Trigger lead capture when user clicks into the payment section
-// or when the last info field (phone) loses focus
+// Trigger lead capture at multiple moments:
+// 1. When phone field loses focus (they finished Step 4)
+// 2. When any info field loses focus (catches partial fills)
+// 3. When they're about to leave the page (closing tab / navigating away)
 document.getElementById('phone').addEventListener('blur', captureLead);
-document.getElementById('sec-payment').addEventListener('click', captureLead);
+document.getElementById('email').addEventListener('blur', captureLead);
+document.getElementById('lname').addEventListener('blur', captureLead);
+window.addEventListener('beforeunload', captureLead);
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') captureLead();
+});
 
 // Init
 loadAvailability().then(() => renderCalendar());

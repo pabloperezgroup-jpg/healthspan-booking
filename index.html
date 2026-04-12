@@ -1465,6 +1465,51 @@ document.getElementById('email').addEventListener('blur', () => {
   if (state.time && !stripeInitialized) initStripePayment();
 });
 
+// ════════════════════════════════════════════
+// LEAD CAPTURE
+// Fires once when user has filled in their info (Step 4)
+// and scrolls to or interacts with the payment section.
+// Captures name/email/phone/intent before they pay.
+// ════════════════════════════════════════════
+let leadCaptured = false;
+
+function captureLead() {
+  if (leadCaptured) return;
+  const fname = document.getElementById('fname').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!fname || !email) return; // Not enough info yet
+
+  leadCaptured = true;
+
+  const leadData = {
+    firstName: fname,
+    lastName: document.getElementById('lname').value.trim(),
+    email: email,
+    phone: document.getElementById('phone').value.trim(),
+    chamber: state.chamber,
+    date: state.date ? dateStr(state.date) : null,
+    time: state.time
+  };
+
+  // Add UTM params if present
+  const params = new URLSearchParams(window.location.search);
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => {
+    if (params.get(k)) leadData[k] = params.get(k);
+  });
+
+  // Fire and forget — no UI impact
+  fetch('/api/capture-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(leadData)
+  }).catch(() => {}); // Silent fail
+}
+
+// Trigger lead capture when user clicks into the payment section
+// or when the last info field (phone) loses focus
+document.getElementById('phone').addEventListener('blur', captureLead);
+document.getElementById('sec-payment').addEventListener('click', captureLead);
+
 // Init
 loadAvailability().then(() => renderCalendar());
 </script>

@@ -546,8 +546,7 @@ async function sendConfirmationEmail(firstName, email, chamber, date, time, amou
         <div style="margin: 0 0 24px;">
           <p style="margin: 0 0 8px; font-weight: 600; font-size: 15px;">Before Your Session</p>
           <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.6;">
-            Please arrive 10 minutes early. Wear comfortable clothing.
-            Avoid carbonated drinks 2 hours before your session.
+            Please arrive 10 minutes early.
             If you have any questions, call us at 786-713-1222.
           </p>
         </div>

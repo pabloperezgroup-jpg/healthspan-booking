@@ -129,13 +129,16 @@ module.exports = async (req, res) => {
           if (appt.Status === 'Cancelled' || appt.Status === 'NoShow') return;
           if (!appt.StartDateTime || !appt.EndDateTime) return;
 
-          var startDt = new Date(appt.StartDateTime);
-          var endDt = new Date(appt.EndDateTime);
-          var dateKey = startDt.toISOString().split('T')[0];
+          // Parse time directly from ISO string to avoid timezone conversion issues.
+          // Mindbody returns local business time like "2026-04-12T11:45:00-04:00"
+          // Using new Date().getHours() would convert to UTC → wrong hours.
+          var startParts = appt.StartDateTime.match(/(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/);
+          var endParts = appt.EndDateTime.match(/(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/);
+          if (!startParts || !endParts) return;
 
-          // Store as minutes since midnight for easy overlap math
-          var startMin = startDt.getHours() * 60 + startDt.getMinutes();
-          var endMin = endDt.getHours() * 60 + endDt.getMinutes();
+          var dateKey = startParts[1];
+          var startMin = parseInt(startParts[2]) * 60 + parseInt(startParts[3]);
+          var endMin = parseInt(endParts[2]) * 60 + parseInt(endParts[3]);
 
           if (!bookedRanges[dateKey]) bookedRanges[dateKey] = [];
           bookedRanges[dateKey].push({ start: startMin, end: endMin });

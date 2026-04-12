@@ -1246,7 +1246,7 @@ function updateBookBtn() {
     btn.disabled = true;
   } else {
     const price = state.chamber === 'soft' ? '$49' : '$99';
-    btn.textContent = `Book My Session · ${price}`;
+    btn.textContent = `Book & Pay My Session · ${price}`;
     btn.disabled = false;
   }
 }
@@ -1323,7 +1323,7 @@ async function completeBooking() {
   if (!stripeElements) {
     msgEl.textContent = 'Payment form is loading. Please wait a moment and try again.';
     msgEl.style.display = 'block';
-    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.textContent = `Book & Pay My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
@@ -1340,7 +1340,7 @@ async function completeBooking() {
   if (stripeError) {
     msgEl.textContent = stripeError.message;
     msgEl.style.display = 'block';
-    btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+    btn.textContent = `Book & Pay My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
     btn.disabled = false;
     return;
   }
@@ -1373,7 +1373,7 @@ async function completeBooking() {
     if (result.error === 'slot_taken') {
       msgEl.textContent = result.message || 'That time was just booked. Please pick another.';
       msgEl.style.display = 'block';
-      btn.textContent = `Book My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
+      btn.textContent = `Book & Pay My Session · ${state.chamber === 'soft' ? '$49' : '$99'}`;
       btn.disabled = false;
       await loadAvailability();
       renderCalendar();

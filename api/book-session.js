@@ -250,15 +250,18 @@ async function verifyMindbodySlot(date, time, chamber) {
     var appointments = data.Appointments || data.StaffAppointments || [];
 
     // Build booked time ranges (minutes since midnight)
+    // Parse directly from ISO string to avoid timezone conversion issues.
+    // Mindbody returns local business time like "2026-04-12T11:45:00-04:00"
     var bookedRanges = [];
     appointments.forEach(function(appt) {
       if (appt.Status === 'Cancelled' || appt.Status === 'NoShow') return;
       if (!appt.StartDateTime || !appt.EndDateTime) return;
-      var startDt = new Date(appt.StartDateTime);
-      var endDt = new Date(appt.EndDateTime);
+      var startParts = appt.StartDateTime.match(/T(\d{2}):(\d{2})/);
+      var endParts = appt.EndDateTime.match(/T(\d{2}):(\d{2})/);
+      if (!startParts || !endParts) return;
       bookedRanges.push({
-        start: startDt.getHours() * 60 + startDt.getMinutes(),
-        end: endDt.getHours() * 60 + endDt.getMinutes()
+        start: parseInt(startParts[1]) * 60 + parseInt(startParts[2]),
+        end: parseInt(endParts[1]) * 60 + parseInt(endParts[2])
       });
     });
 

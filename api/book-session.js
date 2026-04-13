@@ -540,7 +540,7 @@ async function sendConfirmationEmail(firstName, email, chamber, date, time, amou
 
         <div style="background: #f8faf9; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
           <p style="margin: 0 0 4px; font-weight: 600; font-size: 15px;">Location</p>
-          <p style="margin: 0; font-size: 15px; color: #374151;">Healthspan Recovery<br>1441 Brickell Ave, Miami, FL</p>
+          <p style="margin: 0; font-size: 15px; color: #374151;">Healthspan<br>1441 Brickell Ave, Miami, FL</p>
         </div>
 
         <div style="margin: 0 0 24px;">
@@ -552,7 +552,7 @@ async function sendConfirmationEmail(firstName, email, chamber, date, time, amou
         </div>
       </div>
       <div style="padding: 16px 24px; text-align: center; font-size: 13px; color: #9ca3af;">
-        Healthspan Recovery &middot; 1441 Brickell Ave, Miami, FL
+        Healthspan &middot; 1441 Brickell Ave, Miami, FL
       </div>
     </div>
   `;
@@ -581,7 +581,7 @@ async function sendConfirmationSMS(contactId, firstName, chamber, date, time) {
 
   var message = 'Hi ' + firstName + '! Your HBOT session is confirmed: '
     + shortDate + ' at ' + time
-    + '. Healthspan Recovery, 1441 Brickell Ave, Miami. '
+    + '. Healthspan, 1441 Brickell Ave, Miami. '
     + 'Arrive 10 min early. Questions? 786-713-1222';
 
   // Use GHL conversations API to send SMS (requires contactId, not phone)
